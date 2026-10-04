@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cube.local/pack-manager/evidence_record.v1.json",
+  "title": "Pack Manager Evidence Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "record_id",
+    "schema_version",
+    "organization_id",
+    "client_id",
+    "agent",
+    "subject",
+    "captured_at",
+    "operator_label",
+    "images",
+    "checks",
+    "outcome",
+    "overrides",
+    "status",
+    "content_hash"
+  ],
+  "properties": {
+    "record_id": { "type": "string" },
+    "schema_version": { "type": "string", "const": "1.0.0" },
+    "organization_id": { "type": "string" },
+    "client_id": { "type": "string" },
+    "agent": { "type": "string", "const": "pack-manager" },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["order_id"],
+      "properties": {
+        "order_id": { "type": "string" },
+        "package_id": { "type": ["string", "null"] }
+      }
+    },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "operator_label": { "type": "string" },
+    "images": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["image_id", "uri"],
+        "properties": {
+          "image_id": { "type": "string" },
+          "uri": { "type": "string" },
+          "sha256": { "type": ["string", "null"] },
+          "role": { "type": "string", "enum": ["evidence", "reference"] },
+          "view": { "type": "string", "enum": ["top", "side", "detail", "unknown"] }
+        }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check_key",
+          "verdict",
+          "confidence",
+          "detail",
+          "model_version",
+          "latency_ms"
+        ],
+        "properties": {
+          "check_key": {
+            "type": "string",
+            "enum": [
+              "item_presence",
+              "quantity_match",
+              "item_identity",
+              "extra_item_detection",
+              "missing_item_detection",
+              "decision_synthesis"
+            ]
+          },
+          "verdict": { "type": "string", "enum": ["PASS", "FAIL", "UNCERTAIN"] },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+          "detail": { "type": "string" },
+          "model_version": { "type": "string" },
+          "latency_ms": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "decided_by", "decided_at"],
+      "properties": {
+        "decision": { "type": "string", "enum": ["SEAL", "STOP_AND_FIX"] },
+        "decided_by": { "type": "string" },
+        "decided_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "overrides": { "type": "array" },
+    "status": { "type": "string", "enum": ["complete", "needs_review", "error"] },
+    "content_hash": { "type": "string" }
+  }
+}
