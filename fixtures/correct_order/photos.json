@@ -1,0 +1,11 @@
+{
+  "photos": [
+    {
+      "image_id": "photo-pack-001",
+      "uri": "fixtures/correct_order/photos/pack_open.png",
+      "captured_at": "2026-10-04T16:00:00+00:00",
+      "operator_label": "packer-demo",
+      "view": "top"
+    }
+  ]
+}

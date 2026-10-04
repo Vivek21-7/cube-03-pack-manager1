@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "sku": "CAP-BLUE-001",
+      "asin": null,
+      "product_name": "Blue Cap",
+      "category": "apparel",
+      "attributes": { "color": "blue", "size": "M" },
+      "barcode": null,
+      "reference_images": [
+        {
+          "image_id": "ref-blue-cap",
+          "uri": "fixtures/correct_order/catalogue/blue_cap_ref.png",
+          "role": "reference",
+          "view": "detail"
+        }
+      ]
+    }
+  ]
+}

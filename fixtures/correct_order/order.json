@@ -1,0 +1,16 @@
+{
+  "order_id": "ord-correct-001",
+  "organization_id": "org-demo",
+  "client_id": "client-seller-01",
+  "package_id": "pkg-correct-001",
+  "status": "ready_to_pack",
+  "lines": [
+    {
+      "line_id": "line-1",
+      "sku": "CAP-BLUE-001",
+      "asin": null,
+      "expected_qty": 1,
+      "product_name": "Blue Cap"
+    }
+  ]
+}
