@@ -1714,13 +1714,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <script>
     // Master Reactive State
     var packagesData = [
-      { id: "PKG009", name: "General Goods", category: "Electronics", status: "Pending", location: "Bengaluru Hub", date: "Oct 5, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items present, correct quantities & colors (1x Blue Baseball Cap). Packaging undamaged." },
-      { id: "PKG001", name: "Electronics Items", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 5, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items present, correct quantities & colors (1x Blue Baseball Cap). Packaging undamaged." },
+      { id: "PKG009", name: "Action Camera 4K", category: "Electronics", status: "Pending", location: "Bengaluru Hub", date: "Oct 5, 2026", scenarioId: "example_7_electronics_order", verdict: "SEAL", verdictText: "Electronic hardware device verified against manifest. Packaging intact." },
+      { id: "PKG001", name: "Electronics Items", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 5, 2026", scenarioId: "example_7_electronics_order", verdict: "SEAL", verdictText: "Electronic device verified. Packaging undamaged." },
       { id: "PKG002", name: "Books Parcel", category: "Books", status: "In Transit", location: "Bengaluru", date: "Oct 5, 2026", scenarioId: "example_2_wrong_item", verdict: "STOP_FIX", verdictText: "Variant mismatch: Cap color detected RED, expected BLUE. Packaging integrity compromised." },
       { id: "PKG003", name: "Clothes Package", category: "Fashion", status: "Pending", location: "Chennai", date: "Oct 4, 2026", scenarioId: "example_3_missing_item", verdict: "STOP_FIX", verdictText: "Missing item: 1x User Manual missing from box contents." },
       { id: "PKG004", name: "Home Essentials", category: "Home", status: "Delivered", location: "Mumbai", date: "Oct 4, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items verified against manifest. Box sealed for dispatch." },
       { id: "PKG005", name: "Grocery Items", category: "Grocery", status: "In Transit", location: "Delhi", date: "Oct 3, 2026", scenarioId: "example_4_extra_item", verdict: "STOP_FIX", verdictText: "Unauthorized extra item: 1x Red Scarf detected in box not present on order." },
-      { id: "PKG006", name: "Camera Lens Kit", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 2, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "Verified 100% item match." },
+      { id: "PKG006", name: "Camera Lens Kit", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 2, 2026", scenarioId: "example_7_electronics_order", verdict: "SEAL", verdictText: "Verified 100% item match." },
       { id: "PKG007", name: "Designer Shoes", category: "Fashion", status: "Delivered", location: "Pune", date: "Oct 2, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "Verified 100% item match." },
       { id: "PKG008", name: "Kitchen Blender", category: "Home", status: "In Transit", location: "Ahmedabad", date: "Oct 1, 2026", scenarioId: "example_6_damaged_goods", verdict: "STOP_FIX", verdictText: "Packaging damage detected: Physical compression on box carton." }
     ];
@@ -1983,7 +1983,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <div style="margin-top: 10px;">
               <div style="font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Preset Inspection Scenarios:</div>
               <div style="display:flex;flex-wrap:wrap;gap:6px;" id="scenario-pill-container">
-                <button class="action-pill-btn active" id="btn-scen-example_1_correct_order" onclick="switchInspectionScenario('example_1_correct_order')">✅ Correct Order</button>
+                <button class="action-pill-btn ${currentInspectionScenario === 'example_7_electronics_order' ? 'active' : ''}" id="btn-scen-example_7_electronics_order" onclick="switchInspectionScenario('example_7_electronics_order')">📷 Electronics Order</button>
+                <button class="action-pill-btn ${currentInspectionScenario === 'example_1_correct_order' ? 'active' : ''}" id="btn-scen-example_1_correct_order" onclick="switchInspectionScenario('example_1_correct_order')">👕 Apparel Order (T-Shirt &amp; Cap)</button>
                 <button class="action-pill-btn" id="btn-scen-example_2_wrong_item" onclick="switchInspectionScenario('example_2_wrong_item')">❌ Wrong Color</button>
                 <button class="action-pill-btn" id="btn-scen-example_3_missing_item" onclick="switchInspectionScenario('example_3_missing_item')">❌ Missing Item</button>
                 <button class="action-pill-btn" id="btn-scen-example_4_extra_item" onclick="switchInspectionScenario('example_4_extra_item')">❌ Extra Item</button>
@@ -2005,11 +2006,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 0.74rem;">
                 <span style="font-weight: 700; color: #475569;">Target Item in Camera:</span>
                 <div style="display: flex; gap: 6px; margin-top: 4px;">
-                  <input type="text" id="custom-target-name" placeholder="e.g. Baseball Cap, Phone, Book" value="Blue Baseball Cap" style="flex: 1; padding: 4px 8px; font-size: 0.76rem; border: 1px solid #cbd5e1; border-radius: 6px;" oninput="updateManifestTarget()">
+                  <input type="text" id="custom-target-name" placeholder="e.g. Action Camera, Baseball Cap, Phone" value="${p.category === 'Electronics' ? 'Action Camera' : 'Blue Baseball Cap'}" style="flex: 1; padding: 4px 8px; font-size: 0.76rem; border: 1px solid #cbd5e1; border-radius: 6px;" oninput="updateManifestTarget()">
                   <select id="custom-target-color" style="padding: 4px 6px; font-size: 0.76rem; border: 1px solid #cbd5e1; border-radius: 6px;" onchange="updateManifestTarget()">
-                    <option value="blue" selected>Blue Color</option>
+                    <option value="black" ${p.category === 'Electronics' ? 'selected' : ''}>Black / Neutral</option>
+                    <option value="blue" ${p.category !== 'Electronics' ? 'selected' : ''}>Blue Color</option>
                     <option value="red">Red Color</option>
-                    <option value="black">Black Color</option>
                     <option value="standard">Any / Standard</option>
                   </select>
                 </div>
@@ -2399,6 +2400,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "simulation";
         var apiKey = (engine !== "simulation") ? (localStorage.getItem("pack_manager_api_key_" + engine) || "") : null;
 
+        if (engine !== "simulation" && !apiKey) {
+          showToast("Notice: No API key entered for " + (engine === "openai" ? "OpenAI" : "Gemini") + ". Utilizing Smart Computer Vision fallback.");
+        }
+
         var resp = await fetch("/api/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -2410,17 +2415,23 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           })
         });
 
-        if (!resp.ok) {
-          throw new Error("HTTP error " + resp.status);
+        var result;
+        try {
+          result = await resp.json();
+        } catch (jsonErr) {
+          throw new Error("HTTP error " + resp.status + " (Server did not return JSON)");
         }
 
-        var result = await resp.json();
+        if (!resp.ok) {
+          throw new Error(result.error || ("HTTP error " + resp.status));
+        }
+
         renderAnalysisResult(result);
       } catch (err) {
         console.error("AI Analysis failed:", err);
         resultsEl.innerHTML = `
           <div style="padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem;">
-            <strong>Analysis Error:</strong> Failed to complete AI Agent verification. ${err.message}
+            <strong>Analysis Error:</strong> ${err.message}
           </div>
         `;
       } finally {
@@ -2656,6 +2667,7 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
 
         if path == "/api/scenarios":
             scenarios = [
+                {"id": "example_7_electronics_order", "title": "Example 7: Electronics Order (SEAL)"},
                 {"id": "example_1_correct_order", "title": "Example 1: Correct Order (SEAL)"},
                 {"id": "example_2_wrong_item", "title": "Example 2: Wrong Item / Variant (STOP & FIX)"},
                 {"id": "example_3_missing_item", "title": "Example 3: Missing Item (STOP & FIX)"},
@@ -2721,8 +2733,13 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": f"Invalid base64 image data: {e}"})
                 return
 
-            # Instantiate VLM and Agent
-            vlm = get_vlm_client(provider=provider, api_key=api_key)
+            # Instantiate VLM with graceful fallback if credentials missing
+            try:
+                vlm = get_vlm_client(provider=provider, api_key=api_key)
+            except ValueError as ve:
+                logger.warning("VLM client init notice: %s. Using Smart Computer Vision fallback.", ve)
+                vlm = get_vlm_client(provider="simulation")
+
             agent = PackManagerAIAgent(vlm_client=vlm)
 
             try:
@@ -2730,7 +2747,7 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(200, result.to_summary_dict())
             except Exception as e:
                 logger.exception("Verification execution failed")
-                self._send_json(500, {"error": f"Inspection failed: {e}"})
+                self._send_json(400, {"error": f"Inspection failed: {e}"})
             return
 
         self._send_json(404, {"error": "Not found"})

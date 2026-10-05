@@ -209,11 +209,40 @@ def generate_all_scenarios(output_dir: Path) -> dict[str, dict[str, Path]]:
     _draw_damage(d6, 560, 400)
     info6 = PngImagePlugin.PngInfo()
     info6.add_text("scenario", "damaged_product")
-    info6.add_text("damage", "true")
     p6 = s6_dir / "box_photo.png"
     img6.save(p6, format="PNG", pnginfo=info6)
     o6 = s6_dir / "order.json"
     o6.write_text(json.dumps(standard_order, indent=2), encoding="utf-8")
     scenarios["example_6_damaged_goods"] = {"order": o6, "photo": p6}
+
+    # 7. Electronics Order (SEAL) - Action Camera / Electronic Device
+    s7_dir = output_dir / "example_7_electronics_order"
+    s7_dir.mkdir(exist_ok=True)
+    electronics_order = {
+        "order_id": "ORD-2024-009",
+        "items": [
+            {
+                "sku": "CAM-ACT-001",
+                "name": "Action Camera / Electronic Device",
+                "expected_qty": 1,
+                "variant": "matte-black",
+            }
+        ],
+    }
+    img7 = Image.new("RGB", (560, 400), (240, 240, 240))
+    d7 = ImageDraw.Draw(img7)
+    _draw_box(d7, 560, 400)
+    # Draw rigid dark camera body with circular lens
+    d7.rectangle([170, 110, 390, 290], fill=(28, 30, 34), outline=(15, 15, 18), width=3)
+    d7.ellipse([230, 140, 330, 240], fill=(70, 75, 85), outline=(180, 190, 205), width=4)
+    d7.ellipse([255, 165, 305, 215], fill=(20, 22, 28), outline=(100, 120, 150), width=3)
+    d7.text((215, 255), "ACTION CAM 4K", fill=(200, 200, 210))
+    info7 = PngImagePlugin.PngInfo()
+    info7.add_text("scenario", "electronics_order")
+    p7 = s7_dir / "box_photo.png"
+    img7.save(p7, format="PNG", pnginfo=info7)
+    o7 = s7_dir / "order.json"
+    o7.write_text(json.dumps(electronics_order, indent=2), encoding="utf-8")
+    scenarios["example_7_electronics_order"] = {"order": o7, "photo": p7}
 
     return scenarios

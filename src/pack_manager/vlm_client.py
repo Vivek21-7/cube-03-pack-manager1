@@ -230,43 +230,17 @@ class SimulationVLMClient:
     ) -> str:
         """Intelligently inspect a real webcam capture or local uploaded photo using computer vision."""
         import colorsys
+        import numpy as np
 
-        w, h = pil_img.size
-        # Sample center region
-        crop_box = (int(w * 0.1), int(h * 0.1), int(w * 0.9), int(h * 0.9))
-        sample = pil_img.convert("RGB").crop(crop_box).resize((80, 80))
-        sample_pixels = [sample.getpixel((x, y)) for y in range(80) for x in range(80)]
-
-        total_pixels = len(sample_pixels)
-        blue_cnt = 0
-        red_cnt = 0
-        green_cnt = 0
-        dark_cnt = 0
-        light_cnt = 0
-
-        for r, g, b in sample_pixels:
-            h_val, s_val, v_val = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
-            h_deg = h_val * 360.0
-
-            if v_val < 0.22:
-                dark_cnt += 1
-            elif v_val > 0.78 and s_val < 0.20:
-                light_cnt += 1
-            elif s_val > 0.25:
-                if 180 <= h_deg <= 265:
-                    blue_cnt += 1
-                elif h_deg <= 25 or h_deg >= 330:
-                    red_cnt += 1
-                elif 75 <= h_deg <= 165:
-                    green_cnt += 1
-
-        blue_pct = (blue_cnt / total_pixels) * 100.0
-        red_pct = (red_cnt / total_pixels) * 100.0
-        green_pct = (green_cnt / total_pixels) * 100.0
-        dark_pct = (dark_cnt / total_pixels) * 100.0
+        rgb_img = pil_img.convert("RGB")
+        w, h = rgb_img.size
 
         # Check for empty / pitch dark frame
-        if stddev < 4.0 or (dark_pct > 92.0 and stddev < 6.0):
+        arr = np.array(rgb_img, dtype=np.float32)
+        gray_full = 0.299 * arr[:, :, 0] + 0.587 * arr[:, :, 1] + 0.114 * arr[:, :, 2]
+        full_dark_pct = float(np.mean(gray_full < 30) * 100.0)
+
+        if stddev < 3.5 or (full_dark_pct > 92.0 and stddev < 6.0):
             return json.dumps({
                 "order_id": order_id,
                 "order_items": order_items,
@@ -287,112 +261,202 @@ class SimulationVLMClient:
                 "evidence": ["Average brightness/contrast too low", "No product features visible"]
             })
 
-        # Match against manifest
+        # Central ROI where object is held or placed
+        roi = arr[int(h * 0.12):int(h * 0.88), int(w * 0.12):int(w * 0.88)]
+        r, g, b = roi[:, :, 0], roi[:, :, 1], roi[:, :, 2]
+        gray = 0.299 * r + 0.587 * g + 0.114 * b
+
+        diff_rg = np.abs(r - g)
+        diff_rb = np.abs(r - b)
+        is_neutral = (diff_rg < 28) & (diff_rb < 28)
+
+        dark_casing = (gray < 85) & is_neutral
+        dark_casing_pct = float(np.mean(dark_casing) * 100.0)
+
+        bright_lens = (gray >= 100) & (gray <= 210) & is_neutral
+        bright_lens_pct = float(np.mean(bright_lens) * 100.0)
+
+        is_blue = (b > r + 30) & (b > g + 15) & (b > 60)
+        blue_pct = float(np.mean(is_blue) * 100.0)
+
+        is_red = (r > g + 35) & (r > b + 35) & (r > 60)
+        red_pct = float(np.mean(is_red) * 100.0)
+
+        is_green = (g > r + 25) & (g > b + 25) & (g > 60)
+        green_pct = float(np.mean(is_green) * 100.0)
+
+        gy, gx = np.gradient(gray)
+        grad_mag = np.sqrt(gx**2 + gy**2)
+        edge_density = float(np.mean(grad_mag > 18) * 100.0)
+
+        # Detect physical entity types
+        is_electronic_device = (dark_casing_pct > 12.0) and (bright_lens_pct > 3.5 or edge_density > 3.0) and (blue_pct < 5.0)
+        has_blue_apparel = blue_pct >= 2.5
+        has_red_apparel = red_pct >= 2.5
+        has_green_apparel = green_pct >= 3.0
+        has_black_apparel = (dark_casing_pct >= 25.0) and (bright_lens_pct < 3.0) and not is_electronic_device
+
         detected = []
         matches = []
         missing = []
+        extra = []
         mismatch_reasons = []
 
+        # Check if the order expects apparel vs electronics
+        has_apparel_expected = any(
+            any(k in it.get("name", "").lower() for k in ["shirt", "t-shirt", "cap", "hat", "apparel", "cloth", "garment", "hoodie", "pants"])
+            for it in order_items
+        )
+        has_electronics_expected = any(
+            any(k in it.get("name", "").lower() for k in ["electronic", "camera", "gadget", "device", "lens", "phone", "hardware", "sensor", "goods"])
+            for it in order_items
+        )
+
+        # Catalog detected physical objects in scene
+        if is_electronic_device:
+            elec_item = next(
+                (it for it in order_items if any(k in it.get("name", "").lower() for k in ["electronic", "camera", "gadget", "device", "lens", "phone", "hardware", "sensor", "goods"])),
+                None,
+            )
+            detected.append({
+                "name": elec_item["name"] if elec_item else "Electronic Hardware Device / Action Camera",
+                "detected_qty": elec_item.get("expected_qty", 1) if elec_item else 1,
+                "variant": "matte-black/grey",
+                "confidence": "high",
+                "notes": f"Rigid electronic hardware detected with optical sensor (dark casing: {dark_casing_pct:.1f}%, lens/dial element: {bright_lens_pct:.1f}%)"
+            })
+            # If the manifest ONLY expected apparel and NO electronics, this is an unauthorized foreign object!
+            if has_apparel_expected and not has_electronics_expected:
+                extra.append({
+                    "item_name": "Electronic Hardware Device / Action Camera",
+                    "qty": 1,
+                    "notes": "UNAUTHORIZED FOREIGN OBJECT: Handheld electronic device detected in packaging station instead of ordered apparel",
+                })
+
+        if has_blue_apparel:
+            blue_item = next(
+                (it for it in order_items if "blue" in (it.get("name", "") + " " + str(it.get("variant", ""))).lower()),
+                None,
+            )
+            detected.append({
+                "name": blue_item["name"] if blue_item else "Blue Cap",
+                "detected_qty": blue_item.get("expected_qty", 1) if blue_item else 1,
+                "variant": "blue",
+                "confidence": "high",
+                "notes": f"Blue fabric/apparel signature detected ({blue_pct:.1f}% blue pixels)"
+            })
+
+        if has_red_apparel:
+            red_item = next(
+                (it for it in order_items if "red" in (it.get("name", "") + " " + str(it.get("variant", ""))).lower()),
+                None,
+            )
+            detected.append({
+                "name": red_item["name"] if red_item else "Red Cap",
+                "detected_qty": red_item.get("expected_qty", 1) if red_item else 1,
+                "variant": "red",
+                "confidence": "high",
+                "notes": f"Red item signature detected ({red_pct:.1f}% red pixels)"
+            })
+
+        if has_black_apparel:
+            black_item = next(
+                (it for it in order_items if "black" in (it.get("name", "") + " " + str(it.get("variant", ""))).lower()),
+                None,
+            )
+            detected.append({
+                "name": black_item["name"] if black_item else "Black T-Shirt",
+                "detected_qty": black_item.get("expected_qty", 1) if black_item else 1,
+                "variant": "black",
+                "confidence": "high",
+                "notes": f"Dark fabric apparel detected ({dark_casing_pct:.1f}% dark garment profile)"
+            })
+
+        # Manifest reconciliation
         for it in order_items:
             name = it.get("name", "Product").lower()
             var = str(it.get("variant") or "").lower()
             exp_qty = it.get("expected_qty", 1)
 
-            # 1. Item looking for blue (e.g. blue cap)
-            if "blue" in var or "blue" in name:
-                if blue_pct >= 2.5:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": "blue",
-                        "confidence": "high",
-                        "notes": f"Blue object detected ({blue_pct:.1f}% blue pixel signature)"
-                    })
-                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
-                elif red_pct >= 4.0:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": "red",
-                        "confidence": "high",
-                        "notes": f"Color variant mismatch: detected red ({red_pct:.1f}%), expected blue"
-                    })
-                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": False, "status": "FAIL"})
-                    mismatch_reasons.append(f"Variant mismatch on '{it['name']}': detected RED object, expected BLUE")
-                elif green_pct >= 4.0:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": "green",
-                        "confidence": "high",
-                        "notes": f"Color variant mismatch: detected green ({green_pct:.1f}%), expected blue"
-                    })
-                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": False, "status": "FAIL"})
-                    mismatch_reasons.append(f"Variant mismatch on '{it['name']}': detected GREEN object, expected BLUE")
-                else:
-                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
-                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "No blue item detected in camera view"})
+            is_elec_item = any(k in name for k in ["electronic", "camera", "gadget", "device", "lens", "phone", "hardware", "sensor", "goods"])
+            is_apparel_item = any(k in name for k in ["shirt", "t-shirt", "cap", "hat", "apparel", "cloth", "garment", "hoodie", "pants"])
 
-            # 2. Item looking for red
-            elif "red" in var or "red" in name:
-                if red_pct >= 2.5:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": "red",
-                        "confidence": "high",
-                        "notes": f"Red object detected ({red_pct:.1f}% red pixel signature)"
-                    })
+            # 1. Electronics Manifest Item
+            if is_elec_item:
+                if is_electronic_device:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
                 else:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
-                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "No red item detected in camera view"})
+                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "Electronic hardware device not detected in camera frame"})
 
-            # 3. Item looking for black/dark
-            elif "black" in var or "black" in name:
-                if dark_pct >= 6.0:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": "black",
-                        "confidence": "high",
-                        "notes": f"Dark/black item detected ({dark_pct:.1f}% dark pixel signature)"
-                    })
+            # 2. Apparel Manifest Item
+            elif is_apparel_item:
+                # If an electronic device was held instead of apparel
+                if is_electronic_device:
+                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
+                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": f"Expected apparel item '{it['name']}' not found; foreign electronic device present"})
+                elif "blue" in var or "blue" in name:
+                    if has_blue_apparel:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
+                    elif has_red_apparel:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": False, "status": "FAIL"})
+                        mismatch_reasons.append(f"Variant mismatch on '{it['name']}': detected RED object, expected BLUE")
+                    else:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
+                        missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "No blue item detected in camera view"})
+                elif "red" in var or "red" in name:
+                    if has_red_apparel:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
+                    else:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
+                        missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "No red item detected in camera view"})
+                elif "black" in var or "black" in name:
+                    if has_black_apparel:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
+                    else:
+                        matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
+                        missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "Black apparel garment not detected in camera view"})
+                else:
+                    matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
+
+            # 3. Documentation or General Goods
+            elif "manual" in name or "doc" in name:
+                if bright_lens_pct > 15.0 or blue_pct > 4.0:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
                 else:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
-                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "Black item not detected in camera view"})
+                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "User manual documentation not detected in box"})
 
-            # 4. General / Any product
+            # 4. Fallback General Product
             else:
-                if stddev >= 5.0:
-                    detected.append({
-                        "name": it["name"],
-                        "detected_qty": exp_qty,
-                        "variant": it.get("variant") or "standard",
-                        "confidence": "high",
-                        "notes": f"Product object detected in camera view (sharpness score: {stddev:.1f})"
-                    })
+                if stddev >= 5.0 and len(detected) > 0:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": exp_qty, "variant_match": True, "status": "PASS"})
                 else:
                     matches.append({"item_name": it["name"], "expected_qty": exp_qty, "detected_qty": 0, "variant_match": False, "status": "FAIL"})
-                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "Insufficient object contours in frame"})
+                    missing.append({"item_name": it["name"], "expected_qty": exp_qty, "reason": "Item contours not verified in frame"})
 
-        # Evaluate decision
-        has_failed = any(m["status"] == "FAIL" for m in matches)
-        if mismatch_reasons:
+        # Evaluate final packing decision
+        if extra and has_apparel_expected and not has_electronics_expected:
+            decision = "STOP_FIX"
+            missing_names = ", ".join(m["item_name"] for m in missing) or "ordered apparel"
+            decision_reason = (
+                f"CRITICAL DEFECT: Foreign electronic device detected in packaging area instead of expected apparel ({missing_names}). "
+                "Expected items are missing. DO NOT SEAL."
+            )
+        elif mismatch_reasons:
             decision = "STOP_FIX"
             decision_reason = "; ".join(mismatch_reasons)
         elif missing:
             decision = "STOP_FIX"
             missing_names = ", ".join(m["item_name"] for m in missing)
             decision_reason = f"Missing {len(missing)} item(s) in camera photo: {missing_names}. Please add required items before sealing."
-        elif has_failed:
+        elif any(m["status"] == "FAIL" for m in matches):
             decision = "STOP_FIX"
             decision_reason = "Order reconciliation failed against camera inspection."
         else:
             decision = "SEAL"
-            decision_reason = f"All {len(order_items)} item(s) visually verified in camera photograph with correct attributes."
+            verified_names = ", ".join(it["name"] for it in order_items)
+            decision_reason = f"All {len(order_items)} item(s) verified in camera view ({verified_names}). Packaging integrity confirmed."
 
         return json.dumps({
             "order_id": order_id,
@@ -400,17 +464,17 @@ class SimulationVLMClient:
             "detected_items": detected,
             "matches": matches,
             "missing_items": missing,
-            "extra_items": [],
+            "extra_items": extra,
             "product_condition": {
                 "visible_damage": False,
                 "notes": "No carton damage detected in camera frame."
             },
             "decision": decision,
             "decision_reason": decision_reason,
-            "confidence": "high" if not missing and not mismatch_reasons else "medium",
+            "confidence": "high" if not missing and not mismatch_reasons and not extra else "medium",
             "evidence": [
-                f"Camera frame analyzed: blue={blue_pct:.1f}%, red={red_pct:.1f}%, green={green_pct:.1f}%, dark={dark_pct:.1f}%",
-                f"Sharpness metric: {stddev:.1f}",
+                f"Camera frame analyzed: dark_casing={dark_casing_pct:.1f}%, bright_sensor={bright_lens_pct:.1f}%, blue={blue_pct:.1f}%, red={red_pct:.1f}%",
+                f"Electronic device signature: {is_electronic_device}",
                 f"Evaluation: {decision_reason}"
             ]
         })

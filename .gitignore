@@ -13,4 +13,6 @@ build/
 .vscode/
 *.png
 !fixtures/**/*.png
+scratch/
+*.onnx
 .DS_Store

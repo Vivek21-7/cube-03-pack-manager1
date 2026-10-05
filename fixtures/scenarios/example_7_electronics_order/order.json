@@ -1,0 +1,11 @@
+{
+  "order_id": "ORD-2024-009",
+  "items": [
+    {
+      "sku": "CAM-ACT-001",
+      "name": "Action Camera / Electronic Device",
+      "expected_qty": 1,
+      "variant": "matte-black"
+    }
+  ]
+}
