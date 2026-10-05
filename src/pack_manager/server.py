@@ -800,18 +800,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       max-height: 92vh;
       display: flex;
       flex-direction: column;
-      padding: 24px 28px 20px;
+      padding: 22px 26px 16px;
       box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.35);
     }
     #pkg-details-modal #modal-pkg-body {
       overflow-y: auto;
-      max-height: calc(92vh - 130px);
+      max-height: calc(92vh - 140px);
       padding-right: 6px;
     }
     .modal-two-col {
       display: grid;
-      grid-template-columns: 1fr 1.05fr;
-      gap: 22px;
+      grid-template-columns: 1fr 1.08fr;
+      gap: 20px;
       align-items: start;
     }
     @media (max-width: 860px) {
@@ -852,6 +852,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       max-height: 100%;
       object-fit: contain;
       transition: opacity 0.25s ease;
+    }
+    .photo-viewport-img-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: #000;
     }
     .scan-laser-line {
       display: none;
@@ -896,28 +902,35 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       cursor: not-allowed;
       transform: none;
     }
-    .scenario-pill-btn {
-      padding: 4px 10px;
+    .action-pill-btn {
+      padding: 5px 11px;
       border-radius: 14px;
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       font-weight: 600;
       border: 1px solid #cbd5e1;
       background: #ffffff;
-      color: #475569;
+      color: #334155;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       transition: all 0.15s ease;
     }
-    .scenario-pill-btn:hover {
+    .action-pill-btn:hover {
       background: #f1f5f9;
       border-color: #94a3b8;
     }
-    .scenario-pill-btn.active {
+    .action-pill-btn.active {
       background: #eff6ff;
       border-color: #3b82f6;
       color: #1d4ed8;
       font-weight: 700;
     }
-    .modal-card {
+    .dropzone-active {
+      border: 2px dashed #3b82f6 !important;
+      background: rgba(59, 130, 246, 0.15) !important;
+    }
+        .modal-card {
       background: #ffffff;
       border-radius: 16px;
       padding: 28px;
@@ -1625,15 +1638,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
        ====================================================================== -->
   <div class="modal-overlay" id="pkg-details-modal">
     <div class="modal-card">
-      <div class="modal-header-row">
-        <span class="modal-heading" id="modal-pkg-title">Package Details</span>
+      <div class="modal-header-row" style="margin-bottom: 14px;">
+        <div>
+          <span class="modal-heading" id="modal-pkg-title">Outbound Packaging Verification Station</span>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Inspect product photos, capture live packing station camera feeds, and verify with Multimodal AI Agent.</p>
+        </div>
         <button class="btn-close-modal" onclick="closeDetailsModal()">&times;</button>
       </div>
-      <div id="modal-pkg-body" style="font-size: 0.88rem; line-height: 1.8; color: var(--text-main);">
-        <!-- Filled by JS -->
+
+      <div id="modal-pkg-body" style="font-size: 0.88rem; color: var(--text-main);">
+        <!-- Injected dynamically by openPackageDetails -->
       </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeDetailsModal()">Close</button>
+
+      <div class="modal-footer" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.76rem; color: var(--text-muted);">Station terminal connected to Outbound AI Agent &bull; 24-bit RGB inspection</span>
+        <button class="btn-cancel" onclick="closeDetailsModal()">Close Terminal</button>
       </div>
     </div>
   </div>
@@ -1709,6 +1728,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     var activePkgIndex = 0;
     var currentView = "dashboard";
 
+    /* Global Interactive Inspection State */
+    var currentInspectionPkg = null;
+    var currentInspectionIdx = 0;
+    var currentInspectionScenario = "example_1_correct_order";
+    var currentInspectionPhotoB64 = "";
+    var currentInspectionPhotoUrl = "";
+    var currentInspectionOrder = null;
+    var liveMediaStream = null;
+
     function init() {
       renderTables();
     }
@@ -1716,7 +1744,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     /* Navigation between Sidebar Views */
     function navigateTo(viewName) {
       currentView = viewName;
-      // Hide all views
       var views = ["dashboard", "packages", "categories", "inventory", "reports", "settings"];
       views.forEach(function(v) {
         var el = document.getElementById("view-" + v);
@@ -1725,13 +1752,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         if (nav) nav.classList.remove("active");
       });
 
-      // Activate selected view
       var targetView = document.getElementById("view-" + viewName);
       if (targetView) targetView.classList.add("active");
       var targetNav = document.getElementById("nav-" + viewName);
       if (targetNav) targetNav.classList.add("active");
 
-      // Update page title & subtitle
       var titles = {
         dashboard: { title: "Dashboard", sub: "Welcome back, Vivek! Here's an overview of your packages." },
         packages: { title: "Packages Management", sub: "Inspect, track, and dispatch your outbound parcels." },
@@ -1742,8 +1767,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       };
 
       var t = titles[viewName] || titles["dashboard"];
-      document.getElementById("view-title").innerText = t.title;
-      document.getElementById("view-subtitle").innerText = t.sub;
+      var elTitle = document.getElementById("view-title");
+      if (elTitle) elTitle.innerText = t.title;
+      var elSub = document.getElementById("view-subtitle");
+      if (elSub) elSub.innerText = t.sub;
 
       closeAllPopovers();
     }
@@ -1765,7 +1792,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         });
       }
 
-      // 1. Render Dashboard Table (first 5)
       var dashTbody = document.getElementById("packages-table-body");
       if (dashTbody) {
         var dashRows = filtered.slice(0, 5);
@@ -1774,7 +1800,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         }).join("");
       }
 
-      // 2. Render Full Packages Table
       var fullTbody = document.getElementById("full-packages-table-body");
       if (fullTbody) {
         fullTbody.innerHTML = filtered.map(function(p, idx) {
@@ -1786,7 +1811,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     function createRowHtml(p, idx) {
       var catClass = p.category.toLowerCase();
       var statClass = p.status.toLowerCase().replace(/\s+/g, '');
-      return '<tr onclick="openPackageDetails(' + idx + ')">' +
+      return '<tr onclick="openPackageDetails(' + idx + ')" title="Click to view Open Box Photograph & AI Verification">' +
         '<td class="tracking-code">' + p.id + '</td>' +
         '<td class="pkg-name-text">' + p.name + ' <span title="Click to view Open Box Photograph" style="cursor:pointer;font-size:0.9rem;margin-left:4px;">📸</span></td>' +
         '<td><span class="pill-category ' + catClass + '">' + p.category + '</span></td>' +
@@ -1799,63 +1824,25 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       '</tr>';
     }
 
-    /* Search Handler */
-    function handleTableSearch(e) {
-      var query = e.target.value;
-      renderTables(null, null, query);
-    }
-
-    /* Status Filter Pills in Packages View */
-    function applyStatusFilter(btn, status) {
-      document.querySelectorAll(".filter-tab").forEach(function(b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-      renderTables(status);
-    }
-
-    function filterByStatus(status) {
-      navigateTo("packages");
-      var tabs = document.querySelectorAll(".filter-tab");
-      tabs.forEach(function(b) {
-        if (b.innerText.includes(status) || (status === "all" && b.innerText.includes("All"))) {
-          b.classList.add("active");
-        } else {
-          b.classList.remove("active");
-        }
-      });
-      renderTables(status);
-    }
-
-    function filterByCategory(cat) {
-      navigateTo("packages");
-      renderTables(null, cat);
-      showToast("Filtered by " + cat);
-    }
-
-    /* Change Timeframe on Bar Chart */
-    function updateChartTimeframe(e) {
-      var val = e.target.value;
-      var bars = document.getElementById("barchart-bars-container");
-      if (val === "30") {
-        showToast("Loaded 30-Day Aggregated Data");
-      } else if (val === "month") {
-        showToast("Loaded Monthly Metrics");
-      } else {
-        showToast("Loaded Last 7 Days");
-      }
-    }
-
-    /* Add Package Modal & Logic */
+    /* Modal Form for Add Package */
     function openAddPackageModal() {
-      document.getElementById("new-pkg-id").value = "PKG00" + (packagesData.length + 1);
-      document.getElementById("new-pkg-name").value = "";
-      document.getElementById("new-pkg-location").value = "";
-      document.getElementById("add-pkg-modal").classList.add("open");
+      var idField = document.getElementById("new-pkg-id");
+      if (idField) idField.value = "PKG0" + (packagesData.length + 10);
+      var nameField = document.getElementById("new-pkg-name");
+      if (nameField) nameField.value = "";
+      var locField = document.getElementById("new-pkg-location");
+      if (locField) locField.value = "";
+      var m = document.getElementById("add-pkg-modal");
+      if (m) m.classList.add("open");
     }
+
     function closeAddPackageModal() {
-      document.getElementById("add-pkg-modal").classList.remove("open");
+      var m = document.getElementById("add-pkg-modal");
+      if (m) m.classList.remove("open");
     }
+
     function submitAddPackage() {
-      var id = document.getElementById("new-pkg-id").value.trim() || ("PKG00" + (packagesData.length + 1));
+      var id = document.getElementById("new-pkg-id").value.trim() || ("PKG0" + (packagesData.length + 10));
       var name = document.getElementById("new-pkg-name").value.trim() || "General Goods";
       var cat = document.getElementById("new-pkg-category").value;
       var stat = document.getElementById("new-pkg-status").value;
@@ -1873,7 +1860,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         verdictText: "Verified outbound packing complete. Station Cam RGB feed inspected against manifest."
       });
 
-      // Update KPI Counter
       var totalEl = document.getElementById("kpi-val-total");
       if (totalEl) totalEl.innerText = parseInt(totalEl.innerText) + 1;
 
@@ -1887,15 +1873,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       event.stopPropagation();
       activePkgIndex = idx;
       var menu = document.getElementById("row-action-menu");
-      var rect = event.target.getBoundingClientRect();
-      menu.style.top = (rect.bottom + window.scrollY + 4) + "px";
-      menu.style.left = (rect.left - 130) + "px";
-      menu.classList.add("show");
+      if (!menu) return;
+      var btnRect = event.currentTarget.getBoundingClientRect();
+      menu.style.top = (btnRect.bottom + window.scrollY + 4) + "px";
+      menu.style.left = (btnRect.right + window.scrollX - 160) + "px";
+      menu.classList.add("open");
     }
 
     function closeAllPopovers(event) {
       var menu = document.getElementById("row-action-menu");
-      if (menu) menu.classList.remove("show");
+      if (menu && (!event || !event.target.closest(".btn-action-more"))) menu.classList.remove("open");
       var notif = document.getElementById("notif-popover");
       if (notif && (!event || !event.target.closest(".icon-btn"))) notif.classList.remove("open");
       var userPop = document.getElementById("user-popover");
@@ -1921,123 +1908,346 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       closeAllPopovers();
     }
 
-    /* Global Interactive Inspection State */
-    var currentInspectionPkg = null;
-    var currentInspectionIdx = 0;
-    var currentInspectionScenario = "example_1_correct_order";
-    var currentInspectionPhotoB64 = "";
-    var currentInspectionPhotoUrl = "";
-    var currentInspectionOrder = null;
+    /* =========================================================================
+       PACKAGE INSPECTION MODAL:
+       - Open Box Photograph Viewer
+       - Live Capture Camera Feed (Webcam)
+       - Allow Select Files from Local Folder
+       - Multimodal AI Agent Analyzer
+       ========================================================================= */
 
-    /* Package Details Modal - Interactive Product Photo & AI Agent Inspection */
     async function openPackageDetails(idx) {
+      if (idx === undefined || idx === null || idx < 0 || idx >= packagesData.length) {
+        idx = 0;
+      }
       var p = packagesData[idx];
       if (!p) return;
       currentInspectionPkg = p;
       currentInspectionIdx = idx;
       currentInspectionScenario = p.scenarioId || "example_1_correct_order";
 
-      document.getElementById("modal-pkg-title").innerText = p.id + " — " + p.name + " (" + p.category + ")";
+      var titleEl = document.getElementById("modal-pkg-title");
+      if (titleEl) {
+        titleEl.innerText = p.id + " — " + p.name + " (" + p.category + ")";
+      }
       var body = document.getElementById("modal-pkg-body");
 
-      body.innerHTML = '<div class="modal-two-col">' +
-        '<!-- LEFT COLUMN: Product Picture & Packaging Station Camera -->' +
-        '<div>' +
-          '<div class="photo-viewport-card">' +
-            '<div class="photo-viewport-header">' +
-              '<span>📸 Station Cam #03 (24-bit RGB Inspection)</span>' +
-              '<span style="display:flex;align-items:center;gap:5px;color:#10b981;">' +
-                '<span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span> READY' +
-              '</span>' +
-            '</div>' +
-            '<div class="photo-viewport-img-wrap">' +
-              '<div class="scan-laser-line" id="scan-laser-line"></div>' +
-              '<img id="details-box-photo" src="" alt="Product Picture / Open Box Photograph" style="opacity: 0;">' +
-              '<div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading product photo...</div>' +
-            '</div>' +
-          '</div>' +
+      body.innerHTML = `
+        <div class="modal-two-col">
+          <!-- LEFT COLUMN: Product Picture, Live Camera, Folder Files, Manifest -->
+          <div>
+            <!-- Main Photo & Live Camera Viewport -->
+            <div class="photo-viewport-card" id="photo-viewport-container">
+              <div class="photo-viewport-header">
+                <span id="cam-status-label">📸 Station Cam #03 (24-bit RGB)</span>
+                <span id="cam-status-badge" style="display:flex;align-items:center;gap:5px;color:#10b981;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span> READY
+                </span>
+              </div>
+              <div class="photo-viewport-img-wrap" id="dropzone-area">
+                <div class="scan-laser-line" id="scan-laser-line"></div>
+                <!-- Normal Photo Image -->
+                <img id="details-box-photo" src="" alt="Open Box Photograph" style="opacity:0;">
+                <!-- Live Video Element for Camera Feed -->
+                <video id="live-camera-feed" autoplay playsinline style="display:none;"></video>
+                <div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading product photo...</div>
+              </div>
+            </div>
 
-          '<!-- Scenario Presets & Custom Upload -->' +
-          '<div style="margin-top: 10px;">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
-              '<span style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Select Inspection Scenario:</span>' +
-              '<label for="custom-photo-upload" style="font-size:0.74rem;font-weight:700;color:#2563eb;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">' +
-                '📁 Upload Photo' +
-                '<input type="file" id="custom-photo-upload" accept="image/*" style="display:none;" onchange="handleCustomPhotoUpload(event)">' +
-              '</label>' +
-            '</div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:6px;" id="scenario-pill-container">' +
-              '<button class="scenario-pill-btn active" id="btn-scen-example_1_correct_order" onclick="switchInspectionScenario(\'example_1_correct_order\')">✅ Correct Order</button>' +
-              '<button class="scenario-pill-btn" id="btn-scen-example_2_wrong_item" onclick="switchInspectionScenario(\'example_2_wrong_item\')">❌ Wrong Color</button>' +
-              '<button class="scenario-pill-btn" id="btn-scen-example_3_missing_item" onclick="switchInspectionScenario(\'example_3_missing_item\')">❌ Missing Item</button>' +
-              '<button class="scenario-pill-btn" id="btn-scen-example_4_extra_item" onclick="switchInspectionScenario(\'example_4_extra_item\')">❌ Extra Item</button>' +
-              '<button class="scenario-pill-btn" id="btn-scen-example_6_damaged_goods" onclick="switchInspectionScenario(\'example_6_damaged_goods\')">⚠️ Damaged Box</button>' +
-            '</div>' +
-          '</div>' +
+            <!-- Input Controls: Live Camera & Folder Files -->
+            <div style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <!-- 1. Live Camera Button -->
+              <button class="action-pill-btn" id="btn-toggle-camera" onclick="toggleLiveCamera()">
+                <span>📹</span>
+                <span id="btn-toggle-cam-text">Open Live Camera</span>
+              </button>
 
-          '<!-- Expected Manifest Card -->' +
-          '<div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">' +
-            '<div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;">' +
-              '<span>📋 Expected Order Manifest</span>' +
-              '<span id="manifest-order-id" style="font-family:\'JetBrains Mono\',monospace;color:#2563eb;">ORD-2024-001</span>' +
-            '</div>' +
-            '<div id="manifest-items-list" style="font-size:0.82rem;color:var(--text-main);line-height:1.5;">' +
-              'Loading manifest...' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
+              <!-- 2. Capture Photo Button (Visible when camera active) -->
+              <button class="action-pill-btn" id="btn-snap-camera" onclick="captureLiveSnapshot()" style="display:none; background:#10b981; color:#ffffff; border-color:#059669; font-weight:700;">
+                <span>📸</span>
+                <span>Capture Photo</span>
+              </button>
 
-        '<!-- RIGHT COLUMN: AI Agent Verification & Controls -->' +
-        '<div>' +
-          '<!-- Metadata Badges -->' +
-          '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;font-size:0.8rem;">' +
-            '<div><strong>ID:</strong> <span class="tracking-code">' + p.id + '</span></div>' +
-            '<div><strong>Status:</strong> <span class="pill-status ' + p.status.toLowerCase().replace(/\s+/g,'') + '" id="detail-pill-status">' + p.status + '</span></div>' +
-            '<div><strong>Hub:</strong> ' + p.location + '</div>' +
-          '</div>' +
+              <!-- 3. Local Folder File Picker Button -->
+              <label class="action-pill-btn" style="cursor: pointer; background: #f8fafc;">
+                <span>📁</span>
+                <span>Select from Folder</span>
+                <input type="file" id="local-file-input" accept="image/*" style="display:none;" onchange="handleFolderFileSelect(event)">
+              </label>
 
-          '<!-- Primary "Analyze with AI Agent" Button -->' +
-          '<button class="btn-analyze-ai" id="btn-run-analysis" onclick="runAIAgentAnalysis()">' +
-            '<span style="font-size:1.15rem;">⚡</span>' +
-            '<span id="btn-analyze-text">Analyze with AI Agent</span>' +
-          '</button>' +
+              <!-- Drop hint -->
+              <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center; margin-left: auto;">or drag &amp; drop image</span>
+            </div>
 
-          '<!-- Dynamic AI Analysis Results Container -->' +
-          '<div id="ai-analysis-results" style="margin-top: 14px;">' +
-            '<div style="padding: 22px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">' +
-              '<div style="font-size: 1.8rem; margin-bottom: 8px;">🤖</div>' +
-              '<div style="font-weight: 700; color: #1e293b; font-size: 0.92rem;">Ready for Inspection</div>' +
-              '<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">' +
-                'Click <strong>"Analyze with AI Agent"</strong> to verify the open box photograph against the order manifest.' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
+            <!-- Preset Scenarios -->
+            <div style="margin-top: 10px;">
+              <div style="font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">Preset Inspection Scenarios:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;" id="scenario-pill-container">
+                <button class="action-pill-btn active" id="btn-scen-example_1_correct_order" onclick="switchInspectionScenario('example_1_correct_order')">✅ Correct Order</button>
+                <button class="action-pill-btn" id="btn-scen-example_2_wrong_item" onclick="switchInspectionScenario('example_2_wrong_item')">❌ Wrong Color</button>
+                <button class="action-pill-btn" id="btn-scen-example_3_missing_item" onclick="switchInspectionScenario('example_3_missing_item')">❌ Missing Item</button>
+                <button class="action-pill-btn" id="btn-scen-example_4_extra_item" onclick="switchInspectionScenario('example_4_extra_item')">❌ Extra Item</button>
+                <button class="action-pill-btn" id="btn-scen-example_6_damaged_goods" onclick="switchInspectionScenario('example_6_damaged_goods')">⚠️ Damaged Box</button>
+              </div>
+            </div>
 
+            <!-- Expected Manifest Card -->
+            <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;">
+                <span>📋 Expected Order Manifest</span>
+                <span id="manifest-order-id" style="font-family:'JetBrains Mono',monospace;color:#2563eb;font-weight:700;">ORD-2024-001</span>
+              </div>
+              <div id="manifest-items-list" style="font-size:0.82rem;color:var(--text-main);line-height:1.5;">
+                Loading manifest items...
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Package Info, Action Button & Real-time AI Agent Report -->
+          <div>
+            <!-- Shipment Badges -->
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;font-size:0.8rem;">
+              <div><strong>Tracking ID:</strong> <span class="tracking-code">${p.id}</span></div>
+              <div><strong>Status:</strong> <span class="pill-status ${p.status.toLowerCase().replace(/\s+/g,'')}" id="detail-pill-status">${p.status}</span></div>
+              <div><strong>Hub:</strong> ${p.location}</div>
+            </div>
+
+            <!-- Primary Action Button: Analyze with AI Agent -->
+            <button class="btn-analyze-ai" id="btn-run-analysis" onclick="runAIAgentAnalysis()">
+              <span style="font-size:1.15rem;">⚡</span>
+              <span id="btn-analyze-text">Analyze with AI Agent</span>
+            </button>
+
+            <!-- Dynamic AI Analysis Container -->
+            <div id="ai-analysis-results" style="margin-top: 12px;">
+              <div style="padding: 20px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                <div style="font-size: 1.8rem; margin-bottom: 6px;">🤖</div>
+                <div style="font-weight: 700; color: #1e293b; font-size: 0.92rem;">Ready for Inspection</div>
+                <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">
+                  Click <strong>"Analyze with AI Agent"</strong> to verify the open box photograph against the order manifest.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      setupDropzone();
       document.getElementById("pkg-details-modal").classList.add("open");
       await loadInspectionScenario(currentInspectionScenario);
     }
 
-    /* Switch between test scenarios */
+    function closeDetailsModal() {
+      stopLiveCamera();
+      var m = document.getElementById("pkg-details-modal");
+      if (m) m.classList.remove("open");
+    }
+
+    /* =========================================================================
+       Live Camera Capture (Webcam Feed)
+       ========================================================================= */
+
+    async function toggleLiveCamera() {
+      if (liveMediaStream) {
+        stopLiveCamera();
+      } else {
+        await startLiveCamera();
+      }
+    }
+
+    async function startLiveCamera() {
+      var video = document.getElementById("live-camera-feed");
+      var img = document.getElementById("details-box-photo");
+      var btnText = document.getElementById("btn-toggle-cam-text");
+      var snapBtn = document.getElementById("btn-snap-camera");
+      var statusLabel = document.getElementById("cam-status-label");
+      var statusBadge = document.getElementById("cam-status-badge");
+
+      try {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          throw new Error("Webcam access not supported in this browser environment.");
+        }
+        var stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "environment" },
+          audio: false
+        });
+
+        liveMediaStream = stream;
+        video.srcObject = stream;
+        video.style.display = "block";
+        if (img) img.style.display = "none";
+
+        if (btnText) btnText.innerText = "Stop Camera";
+        if (snapBtn) snapBtn.style.display = "inline-flex";
+        if (statusLabel) statusLabel.innerText = "📹 Live Camera Feed (Webcam)";
+        if (statusBadge) {
+          statusBadge.style.color = "#ef4444";
+          statusBadge.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#ef4444;display:inline-block;animation:pulse 1s infinite;"></span> LIVE STREAM';
+        }
+
+        showToast("Live camera stream started");
+      } catch (err) {
+        console.warn("Camera access error:", err);
+        showToast("Camera not accessible: " + err.message + ". Please select file from folder.");
+      }
+    }
+
+    function stopLiveCamera() {
+      if (liveMediaStream) {
+        liveMediaStream.getTracks().forEach(function(t) { t.stop(); });
+        liveMediaStream = null;
+      }
+      var video = document.getElementById("live-camera-feed");
+      var img = document.getElementById("details-box-photo");
+      var btnText = document.getElementById("btn-toggle-cam-text");
+      var snapBtn = document.getElementById("btn-snap-camera");
+      var statusLabel = document.getElementById("cam-status-label");
+      var statusBadge = document.getElementById("cam-status-badge");
+
+      if (video) video.style.display = "none";
+      if (img) img.style.display = "block";
+      if (btnText) btnText.innerText = "Open Live Camera";
+      if (snapBtn) snapBtn.style.display = "none";
+      if (statusLabel) statusLabel.innerText = "📸 Station Cam #03 (24-bit RGB)";
+      if (statusBadge) {
+        statusBadge.style.color = "#10b981";
+        statusBadge.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span> READY';
+      }
+    }
+
+    function captureLiveSnapshot() {
+      var video = document.getElementById("live-camera-feed");
+      if (!video || !liveMediaStream) return;
+
+      var canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      var dataUrl = canvas.toDataURL("image/png");
+      currentInspectionPhotoUrl = dataUrl;
+      currentInspectionPhotoB64 = dataUrl.split(",")[1];
+
+      // Stop camera and show captured image
+      stopLiveCamera();
+
+      var img = document.getElementById("details-box-photo");
+      if (img) {
+        img.src = dataUrl;
+        img.style.display = "block";
+        img.style.opacity = "1";
+      }
+
+      // De-select scenario pills
+      var pills = document.querySelectorAll(".action-pill-btn");
+      pills.forEach(function(b) { b.classList.remove("active"); });
+
+      var resEl = document.getElementById("ai-analysis-results");
+      if (resEl) {
+        resEl.innerHTML = `
+          <div style="padding: 16px; text-align: center; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0;">
+            <div style="font-weight: 700; color: #065f46; font-size: 0.9rem;">📸 Live Snapshot Captured!</div>
+            <div style="font-size: 0.8rem; color: #047857; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> to verify this captured photo.</div>
+          </div>
+        `;
+      }
+
+      showToast("Live photo captured successfully!");
+    }
+
+    /* =========================================================================
+       Allow Select Files from Local Folder
+       ========================================================================= */
+
+    function handleFolderFileSelect(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+      loadLocalImageFile(file);
+    }
+
+    function loadLocalImageFile(file) {
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        var dataUrl = evt.target.result;
+        currentInspectionPhotoUrl = dataUrl;
+        currentInspectionPhotoB64 = dataUrl.split(",")[1];
+
+        stopLiveCamera();
+
+        var img = document.getElementById("details-box-photo");
+        if (img) {
+          img.src = dataUrl;
+          img.style.display = "block";
+          img.style.opacity = "1";
+        }
+        var loader = document.getElementById("details-img-loader");
+        if (loader) loader.style.display = "none";
+
+        var pills = document.querySelectorAll(".action-pill-btn");
+        pills.forEach(function(b) { b.classList.remove("active"); });
+
+        var resEl = document.getElementById("ai-analysis-results");
+        if (resEl) {
+          resEl.innerHTML = `
+            <div style="padding: 16px; text-align: center; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
+              <div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">📁 Selected: ${file.name}</div>
+              <div style="font-size: 0.8rem; color: #2563eb; margin-top: 4px;">Photo loaded from folder. Click <strong>"Analyze with AI Agent"</strong> to inspect.</div>
+            </div>
+          `;
+        }
+
+        showToast("Loaded " + file.name + " from folder");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function setupDropzone() {
+      var zone = document.getElementById("dropzone-area");
+      if (!zone) return;
+
+      zone.ondragover = function(e) {
+        e.preventDefault();
+        zone.classList.add("dropzone-active");
+      };
+      zone.ondragleave = function(e) {
+        e.preventDefault();
+        zone.classList.remove("dropzone-active");
+      };
+      zone.ondrop = function(e) {
+        e.preventDefault();
+        zone.classList.remove("dropzone-active");
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+          loadLocalImageFile(e.dataTransfer.files[0]);
+        }
+      };
+    }
+
+    /* =========================================================================
+       Preset Scenario Switching
+       ========================================================================= */
+
     async function switchInspectionScenario(scenId) {
+      stopLiveCamera();
       currentInspectionScenario = scenId;
-      var pills = document.querySelectorAll(".scenario-pill-btn");
+      var pills = document.querySelectorAll("#scenario-pill-container .action-pill-btn");
       pills.forEach(function(b) { b.classList.remove("active"); });
       var activeBtn = document.getElementById("btn-scen-" + scenId);
       if (activeBtn) activeBtn.classList.add("active");
 
-      // Reset analysis container
-      document.getElementById("ai-analysis-results").innerHTML = 
-        '<div style="padding: 18px 14px; text-align: center; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">' +
-          '<div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Scenario Updated!</div>' +
-          '<div style="font-size: 0.8rem; color: #3b82f6; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> above to evaluate this product picture.</div>' +
-        '</div>';
+      var resEl = document.getElementById("ai-analysis-results");
+      if (resEl) {
+        resEl.innerHTML = `
+          <div style="padding: 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+            <div style="font-weight: 700; color: #1e293b; font-size: 0.9rem;">Scenario Updated!</div>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> to evaluate this product picture.</div>
+          </div>
+        `;
+      }
 
       await loadInspectionScenario(scenId);
     }
 
-    /* Load scenario image and order data from API */
     async function loadInspectionScenario(scenId) {
       try {
         var resp = await fetch("/api/scenario/" + scenId);
@@ -2047,16 +2257,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           currentInspectionPhotoUrl = data.photo_data_url;
           currentInspectionOrder = data.order;
 
-          // Update image
           var img = document.getElementById("details-box-photo");
           var loader = document.getElementById("details-img-loader");
           if (img && data.photo_data_url) {
             img.src = data.photo_data_url;
+            img.style.display = "block";
             img.style.opacity = "1";
             if (loader) loader.style.display = "none";
           }
 
-          // Update Manifest list
           var mList = document.getElementById("manifest-items-list");
           var mId = document.getElementById("manifest-order-id");
           if (data.order) {
@@ -2077,39 +2286,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
 
-    /* Handle Custom Image Upload from User */
-    function handleCustomPhotoUpload(e) {
-      var file = e.target.files && e.target.files[0];
-      if (!file) return;
+    /* =========================================================================
+       AI Agent Inspection Runner
+       ========================================================================= */
 
-      var reader = new FileReader();
-      reader.onload = function(evt) {
-        var dataUrl = evt.target.result;
-        currentInspectionPhotoUrl = dataUrl;
-        currentInspectionPhotoB64 = dataUrl.split(",")[1];
-
-        var img = document.getElementById("details-box-photo");
-        if (img) {
-          img.src = dataUrl;
-          img.style.opacity = "1";
-        }
-
-        // De-select scenario pills
-        var pills = document.querySelectorAll(".scenario-pill-btn");
-        pills.forEach(function(b) { b.classList.remove("active"); });
-
-        document.getElementById("ai-analysis-results").innerHTML = 
-          '<div style="padding: 18px 14px; text-align: center; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0;">' +
-            '<div style="font-weight: 700; color: #065f46; font-size: 0.9rem;">Custom Product Picture Loaded!</div>' +
-            '<div style="font-size: 0.8rem; color: #047857; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> to inspect your uploaded photo.</div>' +
-          '</div>';
-
-        showToast("Custom product photo uploaded");
-      };
-      reader.readAsDataURL(file);
-    }
-
-    /* Run the Real AI Agent Analysis */
     async function runAIAgentAnalysis() {
       var btn = document.getElementById("btn-run-analysis");
       var btnText = document.getElementById("btn-analyze-text");
@@ -2117,7 +2297,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       var resultsEl = document.getElementById("ai-analysis-results");
 
       if (!currentInspectionPhotoB64) {
-        showToast("Please wait for product photo to finish loading");
+        showToast("Please wait for product photo to finish loading or capture camera");
         return;
       }
 
@@ -2125,15 +2305,15 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (btnText) btnText.innerText = "Inspecting with AI Agent...";
       if (laser) laser.style.display = "block";
 
-      // Show animated loading state
-      resultsEl.innerHTML = 
-        '<div style="padding: 24px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">' +
-          '<div style="display:inline-block;width:32px;height:32px;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px;"></div>' +
-          '<div style="font-weight: 700; color: #1e293b; font-size: 0.94rem;">AI Vision Agent Inspecting Contents...</div>' +
-          '<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">' +
-            'Analyzing 24-bit RGB photograph, detecting SKU attributes, cross-referencing order quantities and packaging integrity.' +
-          '</div>' +
-        '</div>';
+      resultsEl.innerHTML = `
+        <div style="padding: 24px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <div style="display:inline-block;width:32px;height:32px;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px;"></div>
+          <div style="font-weight: 700; color: #1e293b; font-size: 0.94rem;">AI Vision Agent Inspecting Contents...</div>
+          <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">
+            Analyzing 24-bit RGB photograph, detecting SKU attributes, cross-referencing order quantities and packaging integrity.
+          </div>
+        </div>
+      `;
 
       try {
         var orderPayload = currentInspectionOrder || {
@@ -2158,10 +2338,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         renderAnalysisResult(result);
       } catch (err) {
         console.error("AI Analysis failed:", err);
-        resultsEl.innerHTML = 
-          '<div style="padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem;">' +
-            '<strong>Analysis Error:</strong> Failed to complete AI Agent verification. ' + err.message +
-          '</div>';
+        resultsEl.innerHTML = `
+          <div style="padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem;">
+            <strong>Analysis Error:</strong> Failed to complete AI Agent verification. ${err.message}
+          </div>
+        `;
       } finally {
         btn.disabled = false;
         if (btnText) btnText.innerText = "Analyze with AI Agent";
@@ -2169,7 +2350,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       }
     }
 
-    /* Render the Full AI Agent Verification Report */
     function renderAnalysisResult(res) {
       var resultsEl = document.getElementById("ai-analysis-results");
       var isSeal = (res.decision === "SEAL");
@@ -2179,10 +2359,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       var badgeBorder = isSeal ? "#a7f3d0" : (isStop ? "#fecaca" : "#fde68a");
       var badgeColor = isSeal ? "#065f46" : (isStop ? "#991b1b" : "#92400e");
       var badgeTitle = isSeal ? "✅ SEAL FOR SHIPPING (PASS)" : (isStop ? "❌ STOP & FIX (HOLD)" : "⚠️ UNCERTAIN (MANUAL REVIEW)");
-
       var confColor = res.confidence === "high" ? "#10b981" : (res.confidence === "medium" ? "#f59e0b" : "#ef4444");
 
-      // Detected items list
       var detHtml = "";
       if (res.detected_items && res.detected_items.length) {
         detHtml = res.detected_items.map(function(d) {
@@ -2196,17 +2374,16 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         detHtml = '<div style="font-size:0.78rem;color:#94a3b8;">No items detected</div>';
       }
 
-      // Reconciliation matches
       var matchRows = "";
       if (res.matches && res.matches.length) {
         matchRows = res.matches.map(function(m) {
           var isPass = (m.status === "PASS");
           return '<tr>' +
-            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9;">' + m.item_name + '</td>' +
-            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.expected_qty + '</td>' +
-            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.detected_qty + '</td>' +
-            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:right;">' +
-              '<span style="padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; background: ' + (isPass ? '#ecfdf5' : '#fef2f2') + '; color: ' + (isPass ? '#059669' : '#dc2626') + ';">' + m.status + '</span>' +
+            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9;">' + m.item_name + '</td>' +
+            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.expected_qty + '</td>' +
+            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.detected_qty + '</td>' +
+            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:right;">' +
+              '<span style="padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; background: ' + (isPass ? '#ecfdf5' : '#fef2f2') + '; color: ' + (isPass ? '#059669' : '#dc2626') + ';">' + m.status + '</span>' +
             '</td>' +
           '</tr>';
         }).join("");
@@ -2214,73 +2391,78 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
       var hasDamage = res.product_condition && res.product_condition.visible_damage;
 
-      resultsEl.innerHTML = 
-        '<!-- Verdict Header -->' +
-        '<div style="padding: 12px 14px; background: ' + badgeBg + '; border: 1px solid ' + badgeBorder + '; border-radius: 10px; margin-bottom: 12px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
-            '<span style="font-weight: 700; color: ' + badgeColor + '; font-size: 0.92rem;">' + badgeTitle + '</span>' +
-            '<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #ffffff; color: ' + confColor + '; border: 1px solid #e2e8f0;">' +
-              (res.confidence ? res.confidence.toUpperCase() : 'HIGH') + ' CONFIDENCE' +
-            '</span>' +
-          '</div>' +
-          '<div style="font-size: 0.82rem; color: ' + badgeColor + '; line-height: 1.4;">' +
-            (res.decision_reason || 'Package contents inspected against expected manifest.') +
-          '</div>' +
-        '</div>' +
+      resultsEl.innerHTML = `
+        <!-- Verdict Header -->
+        <div style="padding: 12px 14px; background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 10px; margin-bottom: 10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="font-weight: 700; color: ${badgeColor}; font-size: 0.92rem;">${badgeTitle}</span>
+            <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #ffffff; color: ${confColor}; border: 1px solid #e2e8f0;">
+              ${(res.confidence ? res.confidence.toUpperCase() : 'HIGH')} CONFIDENCE
+            </span>
+          </div>
+          <div style="font-size: 0.82rem; color: ${badgeColor}; line-height: 1.4;">
+            ${(res.decision_reason || 'Package contents inspected against expected manifest.')}
+          </div>
+        </div>
 
-        '<!-- Detected Items Grid -->' +
-        '<div style="margin-bottom: 10px;">' +
-          '<div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Visual Detections by Agent:</div>' +
-          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' + detHtml + '</div>' +
-        '</div>' +
+        <!-- Detected Items Grid -->
+        <div style="margin-bottom: 10px;">
+          <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Visual Detections by Agent:</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">${detHtml}</div>
+        </div>
 
-        '<!-- Match Reconciliation Table -->' +
-        (matchRows ? (
-          '<div style="margin-bottom: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">' +
-            '<table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">' +
-              '<thead style="background: #f8fafc; color: var(--text-muted); font-size: 0.72rem;">' +
-                '<tr>' +
-                  '<th style="padding: 6px 8px; text-align: left;">Item</th>' +
-                  '<th style="padding: 6px 8px; text-align: center;">Exp</th>' +
-                  '<th style="padding: 6px 8px; text-align: center;">Det</th>' +
-                  '<th style="padding: 6px 8px; text-align: right;">Match</th>' +
-                '</tr>' +
-              '</thead>' +
-              '<tbody>' + matchRows + '</tbody>' +
-            '</table>' +
-          '</div>'
-        ) : '') +
+        <!-- Match Reconciliation Table -->
+        ${matchRows ? `
+          <div style="margin-bottom: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">
+              <thead style="background: #f8fafc; color: var(--text-muted); font-size: 0.72rem;">
+                <tr>
+                  <th style="padding: 5px 8px; text-align: left;">Item</th>
+                  <th style="padding: 5px 8px; text-align: center;">Exp</th>
+                  <th style="padding: 5px 8px; text-align: center;">Det</th>
+                  <th style="padding: 5px 8px; text-align: right;">Match</th>
+                </tr>
+              </thead>
+              <tbody>${matchRows}</tbody>
+            </table>
+          </div>
+        ` : ''}
 
-        '<!-- Packaging Condition -->' +
-        '<div style="padding: 8px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">' +
-          '<span><strong>Packaging Integrity:</strong> ' + (hasDamage ? '⚠️ Damage Detected' : '✅ Undamaged') + '</span>' +
-          '<span style="color:var(--text-muted);font-size:0.74rem;">' + (res.product_condition ? res.product_condition.notes : '') + '</span>' +
-        '</div>' +
+        <!-- Packaging Condition -->
+        <div style="padding: 7px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.76rem; display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+          <span><strong>Packaging Integrity:</strong> ${hasDamage ? '⚠️ Damage Detected' : '✅ Undamaged'}</span>
+          <span style="color:var(--text-muted);font-size:0.72rem;">${(res.product_condition ? res.product_condition.notes : '')}</span>
+        </div>
 
-        '<!-- Operator Action Buttons -->' +
-        '<div style="display:flex;gap:8px;margin-bottom:10px;">' +
-          (isSeal ? 
-            '<button onclick="applyDecisionToPackage(\'Delivered\')" style="flex:1;padding:9px;background:#059669;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">✅ Confirm &amp; Seal Carton</button>' :
-            '<button onclick="applyDecisionToPackage(\'Pending\')" style="flex:1;padding:9px;background:#dc2626;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">❌ Route to Remediation Station</button>'
-          ) +
-        '</div>' +
+        <!-- Operator Action Buttons -->
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          ${isSeal ? 
+            '<button onclick="applyDecisionDelivered()" style="flex:1;padding:8px;background:#059669;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">✅ Confirm &amp; Seal Carton</button>' :
+            '<button onclick="applyDecisionPending()" style="flex:1;padding:8px;background:#dc2626;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">❌ Route to Remediation Station</button>'
+          }
+        </div>
 
-        '<!-- Collapsible Canonical Agent JSON -->' +
-        '<details style="margin-top: 6px;">' +
-          '<summary style="font-size: 0.74rem; font-weight: 700; color: #2563eb; cursor: pointer;">🔍 View Canonical Agent JSON Payload</summary>' +
-          '<pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 8px; font-size: 0.72rem; overflow-x: auto; margin-top: 6px; max-height: 180px;">' +
-            JSON.stringify(res, null, 2) +
-          '</pre>' +
-        '</details>';
+        <!-- Collapsible Canonical Agent JSON -->
+        <details style="margin-top: 4px;">
+          <summary style="font-size: 0.74rem; font-weight: 700; color: #2563eb; cursor: pointer;">🔍 View Canonical Agent JSON Payload</summary>
+          <pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 8px; font-size: 0.72rem; overflow-x: auto; margin-top: 6px; max-height: 160px;">${JSON.stringify(res, null, 2)}</pre>
+        </details>
+      `;
 
-      // Update package state in table
       if (currentInspectionPkg) {
         currentInspectionPkg.verdict = res.decision;
         currentInspectionPkg.verdictText = res.decision_reason;
       }
     }
 
-    /* Apply verdict to update package status */
+    function applyDecisionDelivered() {
+      applyDecisionToPackage("Delivered");
+    }
+
+    function applyDecisionPending() {
+      applyDecisionToPackage("Pending");
+    }
+
     function applyDecisionToPackage(newStatus) {
       if (currentInspectionPkg) {
         currentInspectionPkg.status = newStatus;
@@ -2295,62 +2477,62 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       closeDetailsModal();
     }
 
-    function closeDetailsModal() {
-      document.getElementById("pkg-details-modal").classList.remove("open");
-    }
-
     /* Popover toggles */
     function toggleNotifications(e) {
-      e.stopPropagation();
+      if (e) e.stopPropagation();
       var notif = document.getElementById("notif-popover");
-      notif.classList.toggle("open");
-      document.getElementById("user-popover").classList.remove("open");
+      if (notif) notif.classList.toggle("open");
     }
+
+    function toggleUserMenu(e) {
+      if (e) e.stopPropagation();
+      var pop = document.getElementById("user-popover");
+      if (pop) pop.classList.toggle("open");
+    }
+
     function clearNotifs() {
-      document.getElementById("notif-list").innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.84rem;">No unread notifications</div>';
       var badge = document.getElementById("notif-badge");
       if (badge) badge.style.display = "none";
+      var list = document.getElementById("notif-list");
+      if (list) list.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.8rem;">No new notifications</div>';
       showToast("All notifications marked as read");
     }
-    function toggleUserDropdown(e) {
-      e.stopPropagation();
-      var userPop = document.getElementById("user-popover");
-      userPop.classList.toggle("open");
-      document.getElementById("notif-popover").classList.remove("open");
+
+    function setTimeframe(tf, label) {
+      var tfBtn = document.getElementById("btn-timeframe");
+      if (tfBtn) tfBtn.innerText = label;
+      showToast("Timeframe set to " + label);
     }
 
-    /* Export CSV */
-    function exportDataCsv() {
-      var csv = "Tracking ID,Package Name,Category,Status,Location,Date\\n";
-      packagesData.forEach(function(p) {
-        csv += p.id + ',"' + p.name + '",' + p.category + ',' + p.status + ',"' + p.location + '",' + p.date + "\\n";
-      });
-      var blob = new Blob([csv], { type: "text/csv" });
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement("a");
-      a.href = url;
-      a.download = "pack_manager_shipments.csv";
-      a.click();
-      showToast("Exported " + packagesData.length + " packages to CSV");
+    function filterByStatus(status) {
+      renderTables(status);
+      showToast("Filtered by status: " + status);
     }
 
-    /* Toast Notification Helper */
+    function handleTableSearch(e) {
+      var query = e.target.value.trim();
+      renderTables(null, null, query);
+    }
+
+    function applyStatusFilter(btn, status) {
+      var tabs = document.querySelectorAll(".filter-tab");
+      tabs.forEach(function(t) { t.classList.remove("active"); });
+      if (btn) btn.classList.add("active");
+      renderTables(status);
+    }
+
     function showToast(msg) {
       var toast = document.getElementById("toast-msg");
       var text = document.getElementById("toast-text");
+      if (!toast || !text) return;
       text.innerText = msg;
-      toast.style.display = "flex";
-      setTimeout(function() {
-        toast.style.display = "none";
-      }, 2600);
+      toast.classList.add("show");
+      setTimeout(function() { toast.classList.remove("show"); }, 3000);
     }
 
-    // Auto-init
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", init);
-    } else {
-      init();
-    }
+    // Initialize on load
+    document.addEventListener("DOMContentLoaded", init);
+
   </script>
 </body>
 </html>
