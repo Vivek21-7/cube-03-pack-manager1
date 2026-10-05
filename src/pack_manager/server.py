@@ -179,7 +179,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     .grid-layout {
       display: grid;
-      grid-template-columns: 1fr 1.15fr;
+      grid-template-columns: 1.15fr 1fr;
       gap: 24px;
     }
     @media (max-width: 1024px) {
@@ -549,43 +549,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     </div>
 
     <div class="grid-layout">
-      <!-- Left Panel: Input Station -->
+      <!-- Left Panel: AI Verification Dashboard & Results -->
       <section class="panel">
         <div class="panel-header">
-          <div class="panel-title">1. Open Package Intake</div>
-          <span id="scenario-id-tag" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">example_1_correct_order</span>
-        </div>
-
-        <div class="img-preview-container" id="img-preview-box">
-          <div class="scan-line"></div>
-          <img id="box-image" src="" alt="Open Box Photo">
-        </div>
-
-        <div class="photo-actions">
-          <label class="file-input-label">
-            <input type="file" id="file-uploader" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
-            📁 Upload Custom Photo
-          </label>
-        </div>
-
-        <div class="order-editor-container">
-          <div class="order-editor-label">
-            <span>Expected Order Specification (JSON)</span>
-            <span style="font-weight: normal; font-size: 0.72rem;">Editable</span>
-          </div>
-          <textarea id="order-json-input" class="order-editor" spellcheck="false"></textarea>
-        </div>
-
-        <button id="btn-run-verify" class="btn-verify" onclick="triggerInspection()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Run AI Pack Verification
-        </button>
-      </section>
-
-      <!-- Right Panel: Inspection Verdict -->
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">2. AI Verification Verdict</div>
+          <div class="panel-title">1. Verification Dashboard</div>
           <span id="order-id-label" style="font-size: 0.75rem; font-family: monospace; color: #60a5fa;">ORD-2024-001</span>
         </div>
 
@@ -645,6 +612,39 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <button onclick="copyRawJson()" style="background: none; border: none; color: #60a5fa; cursor: pointer; font-size: 0.75rem;">Copy JSON</button>
         </div>
         <pre id="raw-json-viewer" class="json-box"></pre>
+      </section>
+
+      <!-- Right Panel: Package Intake & Order Spec -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">2. Package Intake & Order Spec</div>
+          <span id="scenario-id-tag" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">example_1_correct_order</span>
+        </div>
+
+        <div class="img-preview-container" id="img-preview-box">
+          <div class="scan-line"></div>
+          <img id="box-image" src="" alt="Open Box Photo">
+        </div>
+
+        <div class="photo-actions">
+          <label class="file-input-label">
+            <input type="file" id="file-uploader" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+            📁 Upload Custom Photo
+          </label>
+        </div>
+
+        <div class="order-editor-container">
+          <div class="order-editor-label">
+            <span>Expected Order Specification (JSON)</span>
+            <span style="font-weight: normal; font-size: 0.72rem;">Editable</span>
+          </div>
+          <textarea id="order-json-input" class="order-editor" spellcheck="false"></textarea>
+        </div>
+
+        <button id="btn-run-verify" class="btn-verify" onclick="triggerInspection()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run AI Pack Verification
+        </button>
       </section>
     </div>
   </main>
