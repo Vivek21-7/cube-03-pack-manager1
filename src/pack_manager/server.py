@@ -131,9 +131,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       background: rgba(255, 255, 255, 0.12);
     }
     main {
-      max-width: 1440px;
-      margin: 28px auto;
-      padding: 0 28px;
+      max-width: 1240px;
+      margin: 24px auto;
+      padding: 0 24px;
     }
     .scenarios-bar {
       margin-bottom: 24px;
@@ -177,13 +177,32 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       border-color: #3b82f6;
       box-shadow: 0 2px 10px var(--accent-glow);
     }
-    .grid-layout {
-      display: grid;
-      grid-template-columns: 1.15fr 1fr;
-      gap: 24px;
+    .vertical-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
     }
-    @media (max-width: 1024px) {
-      .grid-layout { grid-template-columns: 1fr; }
+    .intake-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+    @media (max-width: 860px) {
+      .intake-grid { grid-template-columns: 1fr; }
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #2563eb, #3b82f6);
+      color: #ffffff;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 2px 8px var(--accent-glow);
     }
     .panel {
       background: var(--card-bg);
@@ -548,11 +567,56 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       </div>
     </div>
 
-    <div class="grid-layout">
-      <!-- Left Panel: AI Verification Dashboard & Results -->
+    <div class="vertical-layout">
+      <!-- 1. Package Intake & Order Spec -->
       <section class="panel">
         <div class="panel-header">
-          <div class="panel-title">1. Verification Dashboard</div>
+          <div class="panel-title">
+            <span class="step-badge">1</span>
+            <span>Open Package Intake &amp; Order Spec</span>
+          </div>
+          <span id="scenario-id-tag" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">example_1_correct_order</span>
+        </div>
+
+        <div class="intake-grid">
+          <div>
+            <div class="img-preview-container" id="img-preview-box">
+              <div class="scan-line"></div>
+              <img id="box-image" src="" alt="Open Box Photo">
+            </div>
+
+            <div class="photo-actions">
+              <label class="file-input-label">
+                <input type="file" id="file-uploader" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
+                📁 Upload Custom Photo
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column;">
+            <div class="order-editor-container" style="flex: 1; display: flex; flex-direction: column;">
+              <div class="order-editor-label">
+                <span>Expected Order Specification (JSON)</span>
+                <span style="font-weight: normal; font-size: 0.72rem;">Editable</span>
+              </div>
+              <textarea id="order-json-input" class="order-editor" spellcheck="false" style="flex: 1; min-height: 260px;"></textarea>
+            </div>
+
+            <button id="btn-run-verify" class="btn-verify" onclick="triggerInspection()" style="margin-top: 14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Run AI Pack Verification
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. AI Verification Verdict & Dashboard -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span class="step-badge">2</span>
+            <span>AI Verification Verdict &amp; Dashboard</span>
+          </div>
           <span id="order-id-label" style="font-size: 0.75rem; font-family: monospace; color: #60a5fa;">ORD-2024-001</span>
         </div>
 
@@ -602,7 +666,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           </tbody>
         </table>
 
-        <div class="section-title">Visual Evidence & Findings</div>
+        <div class="section-title">Visual Evidence &amp; Findings</div>
         <ul id="evidence-list" class="evidence-list">
           <!-- Rendered via JS -->
         </ul>
@@ -612,39 +676,6 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <button onclick="copyRawJson()" style="background: none; border: none; color: #60a5fa; cursor: pointer; font-size: 0.75rem;">Copy JSON</button>
         </div>
         <pre id="raw-json-viewer" class="json-box"></pre>
-      </section>
-
-      <!-- Right Panel: Package Intake & Order Spec -->
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">2. Package Intake & Order Spec</div>
-          <span id="scenario-id-tag" style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">example_1_correct_order</span>
-        </div>
-
-        <div class="img-preview-container" id="img-preview-box">
-          <div class="scan-line"></div>
-          <img id="box-image" src="" alt="Open Box Photo">
-        </div>
-
-        <div class="photo-actions">
-          <label class="file-input-label">
-            <input type="file" id="file-uploader" accept="image/*" style="display:none;" onchange="handleFileUpload(event)">
-            📁 Upload Custom Photo
-          </label>
-        </div>
-
-        <div class="order-editor-container">
-          <div class="order-editor-label">
-            <span>Expected Order Specification (JSON)</span>
-            <span style="font-weight: normal; font-size: 0.72rem;">Editable</span>
-          </div>
-          <textarea id="order-json-input" class="order-editor" spellcheck="false"></textarea>
-        </div>
-
-        <button id="btn-run-verify" class="btn-verify" onclick="triggerInspection()">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          Run AI Pack Verification
-        </button>
       </section>
     </div>
   </main>
