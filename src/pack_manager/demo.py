@@ -51,6 +51,17 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="Optional path to write the evidence record as JSON.",
     )
+    parser.add_argument(
+        "--agent",
+        action="store_true",
+        help="Use the PackManagerAIAgent VLM backend instead of the heuristic blob backend.",
+    )
+    parser.add_argument(
+        "--provider",
+        choices=["gemini", "openai", "anthropic", "simulation"],
+        default=None,
+        help="VLM provider if --agent is used.",
+    )
     args = parser.parse_args(argv)
 
     if args.write_images or not (FIXTURES / "photos" / "pack_open.png").exists():
@@ -61,7 +72,16 @@ def main(argv: list[str] | None = None) -> int:
         catalogue_path=FIXTURES / "catalogue.json",
         photos_path=FIXTURES / "photos.json",
     )
-    result = evaluate_pack(event)
+
+    vision_backend = None
+    if args.agent:
+        from pack_manager.agent import PackManagerAIAgent
+        from pack_manager.vlm_client import get_vlm_client
+
+        agent = PackManagerAIAgent(vlm_client=get_vlm_client(provider=args.provider))
+        vision_backend = agent.as_vision_backend()
+
+    result = evaluate_pack(event, vision=vision_backend)
     _print_table(result)
     payload = {
         "comparison": result.comparison.model_dump(mode="json"),
