@@ -1290,7 +1290,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <!-- Recent Packages Table -->
         <div class="table-card">
           <div class="table-card-header">
-            <span class="chart-title">Recent Packages</span>
+            <span class="chart-title">Recent Packages <span style="font-size: 0.74rem; font-weight: 600; color: #2563eb; background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 10px; border-radius: 12px; margin-left: 8px; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px;">📸 Click any package to view Open Box Photo</span></span>
             <span class="table-view-all" onclick="navigateTo('packages')">View All</span>
           </div>
 
@@ -1575,6 +1575,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <script>
     // Master Reactive State
     var packagesData = [
+      { id: "PKG009", name: "General Goods", category: "Electronics", status: "Pending", location: "Bengaluru Hub", date: "Oct 5, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items present, correct quantities & colors (1x Blue Baseball Cap). Packaging undamaged." },
       { id: "PKG001", name: "Electronics Items", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 5, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items present, correct quantities & colors (1x Blue Baseball Cap). Packaging undamaged." },
       { id: "PKG002", name: "Books Parcel", category: "Books", status: "In Transit", location: "Bengaluru", date: "Oct 5, 2026", scenarioId: "example_2_wrong_item", verdict: "STOP_FIX", verdictText: "Variant mismatch: Cap color detected RED, expected BLUE. Packaging integrity compromised." },
       { id: "PKG003", name: "Clothes Package", category: "Fashion", status: "Pending", location: "Chennai", date: "Oct 4, 2026", scenarioId: "example_3_missing_item", verdict: "STOP_FIX", verdictText: "Missing item: 1x User Manual missing from box contents." },
@@ -1746,7 +1747,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         category: cat,
         status: stat,
         location: loc,
-        date: "Oct 5, 2026"
+        date: "Oct 5, 2026",
+        scenarioId: "example_1_correct_order",
+        verdict: "SEAL",
+        verdictText: "Verified outbound packing complete. Station Cam RGB feed inspected against manifest."
       });
 
       // Update KPI Counter
