@@ -794,6 +794,9 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       justify-content: center;
     }
     .modal-overlay.open { display: flex; }
+    #pkg-details-modal .modal-card {
+      max-width: 640px;
+    }
     .modal-card {
       background: #ffffff;
       border-radius: 16px;
@@ -998,6 +1001,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <p class="page-subtitle" id="view-subtitle">Welcome back, Vivek! Here's an overview of your packages.</p>
       </div>
       <div class="topbar-right">
+        <!-- Open Box Photograph Quick Access Button -->
+        <button class="btn-box-photo" onclick="openPackageDetails(0)" title="View Open Box Photograph for PKG001" style="display: flex; align-items: center; gap: 7px; padding: 8px 15px; border-radius: 20px; border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8; font-size: 0.84rem; font-weight: 700; cursor: pointer; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(37,99,235,0.12);">
+          <span style="font-size: 1rem;">📸</span>
+          <span>Open Box Photograph</span>
+        </button>
+
         <!-- Search bar -->
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -1566,14 +1575,14 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <script>
     // Master Reactive State
     var packagesData = [
-      { id: "PKG001", name: "Electronics Items", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 5, 2026" },
-      { id: "PKG002", name: "Books Parcel", category: "Books", status: "In Transit", location: "Bengaluru", date: "Oct 5, 2026" },
-      { id: "PKG003", name: "Clothes Package", category: "Fashion", status: "Pending", location: "Chennai", date: "Oct 4, 2026" },
-      { id: "PKG004", name: "Home Essentials", category: "Home", status: "Delivered", location: "Mumbai", date: "Oct 4, 2026" },
-      { id: "PKG005", name: "Grocery Items", category: "Grocery", status: "In Transit", location: "Delhi", date: "Oct 3, 2026" },
-      { id: "PKG006", name: "Camera Lens Kit", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 2, 2026" },
-      { id: "PKG007", name: "Designer Shoes", category: "Fashion", status: "Delivered", location: "Pune", date: "Oct 2, 2026" },
-      { id: "PKG008", name: "Kitchen Blender", category: "Home", status: "In Transit", location: "Ahmedabad", date: "Oct 1, 2026" }
+      { id: "PKG001", name: "Electronics Items", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 5, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items present, correct quantities & colors (1x Blue Baseball Cap). Packaging undamaged." },
+      { id: "PKG002", name: "Books Parcel", category: "Books", status: "In Transit", location: "Bengaluru", date: "Oct 5, 2026", scenarioId: "example_2_wrong_item", verdict: "STOP_FIX", verdictText: "Variant mismatch: Cap color detected RED, expected BLUE. Packaging integrity compromised." },
+      { id: "PKG003", name: "Clothes Package", category: "Fashion", status: "Pending", location: "Chennai", date: "Oct 4, 2026", scenarioId: "example_3_missing_item", verdict: "STOP_FIX", verdictText: "Missing item: 1x User Manual missing from box contents." },
+      { id: "PKG004", name: "Home Essentials", category: "Home", status: "Delivered", location: "Mumbai", date: "Oct 4, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "All items verified against manifest. Box sealed for dispatch." },
+      { id: "PKG005", name: "Grocery Items", category: "Grocery", status: "In Transit", location: "Delhi", date: "Oct 3, 2026", scenarioId: "example_4_extra_item", verdict: "STOP_FIX", verdictText: "Unauthorized extra item: 1x Red Scarf detected in box not present on order." },
+      { id: "PKG006", name: "Camera Lens Kit", category: "Electronics", status: "Delivered", location: "Hyderabad", date: "Oct 2, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "Verified 100% item match." },
+      { id: "PKG007", name: "Designer Shoes", category: "Fashion", status: "Delivered", location: "Pune", date: "Oct 2, 2026", scenarioId: "example_1_correct_order", verdict: "SEAL", verdictText: "Verified 100% item match." },
+      { id: "PKG008", name: "Kitchen Blender", category: "Home", status: "In Transit", location: "Ahmedabad", date: "Oct 1, 2026", scenarioId: "example_6_damaged_goods", verdict: "STOP_FIX", verdictText: "Packaging damage detected: Physical compression on box carton." }
     ];
 
     var activePkgIndex = 0;
@@ -1658,7 +1667,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       var statClass = p.status.toLowerCase().replace(/\s+/g, '');
       return '<tr onclick="openPackageDetails(' + idx + ')">' +
         '<td class="tracking-code">' + p.id + '</td>' +
-        '<td class="pkg-name-text">' + p.name + '</td>' +
+        '<td class="pkg-name-text">' + p.name + ' <span title="Click to view Open Box Photograph" style="cursor:pointer;font-size:0.9rem;margin-left:4px;">📸</span></td>' +
         '<td><span class="pill-category ' + catClass + '">' + p.category + '</span></td>' +
         '<td><span class="pill-status ' + statClass + '">' + p.status + '</span></td>' +
         '<td>' + p.location + '</td>' +
@@ -1788,24 +1797,61 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       closeAllPopovers();
     }
 
-    /* Package Details Modal */
-    function openPackageDetails(idx) {
+    /* Package Details Modal - Displays Open Box Photograph & AI Verification */
+    async function openPackageDetails(idx) {
       var p = packagesData[idx];
       if (!p) return;
       document.getElementById("modal-pkg-title").innerText = p.id + " — " + p.name;
       var body = document.getElementById("modal-pkg-body");
-      body.innerHTML = '<div><strong>Tracking ID:</strong> ' + p.id + '</div>' +
-        '<div><strong>Category:</strong> ' + p.category + '</div>' +
+      var scenId = p.scenarioId || "example_1_correct_order";
+      var isSeal = (p.verdict === "SEAL");
+
+      body.innerHTML = '<div style="margin-bottom: 14px;">' +
+        '<div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">' +
+          '<span>📸 Open Box Photograph (Packing Station RGB Camera)</span>' +
+          '<span style="font-size: 0.74rem; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Station Cam #03</span>' +
+        '</div>' +
+        '<div style="position: relative; width: 100%; height: 260px; background: #060911; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px dashed #cbd5e1;">' +
+          '<img id="details-box-photo" src="" alt="Open Box Photograph" style="max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease;">' +
+          '<div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading Open Box Photograph...</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 0.84rem;">' +
+        '<div><strong>Tracking ID:</strong> <span class="tracking-code">' + p.id + '</span></div>' +
+        '<div><strong>Category:</strong> <span class="pill-category ' + p.category.toLowerCase() + '">' + p.category + '</span></div>' +
         '<div><strong>Status:</strong> <span class="pill-status ' + p.status.toLowerCase().replace(/\s+/g,'') + '">' + p.status + '</span></div>' +
         '<div><strong>Hub Location:</strong> ' + p.location + '</div>' +
-        '<div><strong>Last Scanned:</strong> ' + p.date + '</div>' +
-        '<div style="margin-top: 14px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">' +
-          '<div style="font-weight: 600; margin-bottom: 4px;">Milestone Timeline:</div>' +
-          '<div style="color: #10b981;">&bull; Order Processed &amp; Pack Verified (100% Match)</div>' +
-          '<div style="color: #3b82f6;">&bull; Dispatched from Origin Distribution Center</div>' +
-          '<div style="color: var(--text-muted);">&bull; Handed over to last-mile transport courier</div>' +
-        '</div>';
+      '</div>' +
+      '<div style="padding: 12px 14px; background: ' + (isSeal ? '#ecfdf5' : '#fef2f2') + '; border: 1px solid ' + (isSeal ? '#a7f3d0' : '#fecaca') + '; border-radius: 10px; margin-bottom: 14px;">' +
+        '<div style="font-weight: 700; color: ' + (isSeal ? '#065f46' : '#991b1b') + '; margin-bottom: 2px;">' +
+          'AI Pack Verification Verdict: ' + (isSeal ? '✅ SEAL FOR SHIPPING (PASS)' : '❌ STOP & FIX (HOLD)') +
+        '</div>' +
+        '<div style="font-size: 0.82rem; color: ' + (isSeal ? '#047857' : '#b91c1c') + ';">' +
+          (p.verdictText || 'Package contents inspected against expected manifest.') +
+        '</div>' +
+      '</div>' +
+      '<div style="padding: 10px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.8rem; color: var(--text-muted);">' +
+        '<strong>Visual Verification Note:</strong> Photograph captured at packing station under 24-bit RGB inspection lighting before box seal.' +
+      '</div>';
+
       document.getElementById("pkg-details-modal").classList.add("open");
+
+      // Asynchronously fetch and display the Open Box Photograph from API
+      try {
+        var resp = await fetch("/api/scenario/" + scenId);
+        if (resp.ok) {
+          var data = await resp.json();
+          var img = document.getElementById("details-box-photo");
+          var loader = document.getElementById("details-img-loader");
+          if (img && data.photo_data_url) {
+            img.src = data.photo_data_url;
+            img.style.opacity = "1";
+            if (loader) loader.style.display = "none";
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load box photograph", err);
+      }
     }
     function closeDetailsModal() {
       document.getElementById("pkg-details-modal").classList.remove("open");
