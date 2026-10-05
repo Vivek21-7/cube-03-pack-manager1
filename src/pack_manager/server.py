@@ -1993,12 +1993,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
             <!-- Expected Manifest Card -->
             <div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">
-              <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;">
+              <div style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
                 <span>📋 Expected Order Manifest</span>
                 <span id="manifest-order-id" style="font-family:'JetBrains Mono',monospace;color:#2563eb;font-weight:700;">ORD-2024-001</span>
               </div>
               <div id="manifest-items-list" style="font-size:0.82rem;color:var(--text-main);line-height:1.5;">
                 Loading manifest items...
+              </div>
+
+              <!-- Quick Target Customizer for Live Camera & Folder Uploads -->
+              <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 0.74rem;">
+                <span style="font-weight: 700; color: #475569;">Target Item in Camera:</span>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                  <input type="text" id="custom-target-name" placeholder="e.g. Baseball Cap, Phone, Book" value="Blue Baseball Cap" style="flex: 1; padding: 4px 8px; font-size: 0.76rem; border: 1px solid #cbd5e1; border-radius: 6px;" oninput="updateManifestTarget()">
+                  <select id="custom-target-color" style="padding: 4px 6px; font-size: 0.76rem; border: 1px solid #cbd5e1; border-radius: 6px;" onchange="updateManifestTarget()">
+                    <option value="blue" selected>Blue Color</option>
+                    <option value="red">Red Color</option>
+                    <option value="black">Black Color</option>
+                    <option value="standard">Any / Standard</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>
@@ -2010,6 +2024,22 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <div><strong>Tracking ID:</strong> <span class="tracking-code">${p.id}</span></div>
               <div><strong>Status:</strong> <span class="pill-status ${p.status.toLowerCase().replace(/\s+/g,'')}" id="detail-pill-status">${p.status}</span></div>
               <div><strong>Hub:</strong> ${p.location}</div>
+            </div>
+
+            <!-- Vision AI Engine Selector -->
+            <div style="margin-bottom: 10px; padding: 8px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Vision AI Engine:</span>
+                <select id="select-ai-engine" onchange="toggleAiEngine(this.value)" style="font-size:0.76rem;font-weight:600;padding:3px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#ffffff;color:#1e293b;">
+                  <option value="simulation" selected>⚡ Smart Computer Vision (Offline)</option>
+                  <option value="gemini">✨ Google Gemini 2.0 Flash Vision</option>
+                  <option value="openai">🧠 OpenAI GPT-4o Vision</option>
+                </select>
+              </div>
+              <div id="api-key-container" style="display:none;margin-top:8px;">
+                <input type="password" id="input-api-key" placeholder="Paste your API Key here..." style="width:100%;padding:5px 8px;font-size:0.76rem;border:1px solid #93c5fd;border-radius:6px;" oninput="saveApiKey(this.value)">
+                <div style="font-size:0.7rem;color:#64748b;margin-top:3px;">Stored in browser. Get free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2563eb;text-decoration:underline;">aistudio.google.com</a>.</div>
+              </div>
             </div>
 
             <!-- Primary Action Button: Analyze with AI Agent -->
@@ -2290,6 +2320,51 @@ HTML_TEMPLATE = """<!DOCTYPE html>
        AI Agent Inspection Runner
        ========================================================================= */
 
+
+    function toggleAiEngine(engine) {
+      var box = document.getElementById("api-key-container");
+      var input = document.getElementById("input-api-key");
+      if (engine === "simulation") {
+        if (box) box.style.display = "none";
+      } else {
+        if (box) box.style.display = "block";
+        if (input) {
+          input.value = localStorage.getItem("pack_manager_api_key_" + engine) || "";
+          input.placeholder = "Paste your " + (engine === "gemini" ? "Google Gemini" : "OpenAI") + " API Key...";
+        }
+      }
+    }
+
+    function saveApiKey(val) {
+      var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "gemini";
+      localStorage.setItem("pack_manager_api_key_" + engine, val.trim());
+    }
+
+    function updateManifestTarget() {
+      var name = document.getElementById("custom-target-name") ? document.getElementById("custom-target-name").value.trim() : "Blue Baseball Cap";
+      var color = document.getElementById("custom-target-color") ? document.getElementById("custom-target-color").value : "blue";
+      
+      currentInspectionOrder = {
+        order_id: (currentInspectionPkg ? currentInspectionPkg.id : "ORD-2024-001"),
+        items: [
+          {
+            name: name || "Product Item",
+            expected_qty: 1,
+            variant: color,
+            sku: "SKU-" + (color.toUpperCase())
+          }
+        ]
+      };
+
+      var mList = document.getElementById("manifest-items-list");
+      if (mList) {
+        mList.innerHTML = '<div style="display:flex;justify-content:space-between;padding:2px 0;">' +
+          '<span>&bull; ' + (name || "Product Item") + ' <span style="color:#64748b;font-size:0.75rem;">[' + color + ']</span></span>' +
+          '<span style="font-weight:700;">Qty: 1</span>' +
+        '</div>';
+      }
+    }
+
     async function runAIAgentAnalysis() {
       var btn = document.getElementById("btn-run-analysis");
       var btnText = document.getElementById("btn-analyze-text");
@@ -2321,12 +2396,17 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           items: [{ name: currentInspectionPkg.name, expected_qty: 1 }]
         };
 
+        var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "simulation";
+        var apiKey = (engine !== "simulation") ? (localStorage.getItem("pack_manager_api_key_" + engine) || "") : null;
+
         var resp = await fetch("/api/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             order: orderPayload,
-            photo_base64: currentInspectionPhotoB64
+            photo_base64: currentInspectionPhotoB64,
+            provider: engine,
+            api_key: apiKey
           })
         });
 
