@@ -795,7 +795,127 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     }
     .modal-overlay.open { display: flex; }
     #pkg-details-modal .modal-card {
-      max-width: 640px;
+      max-width: 980px;
+      width: 95%;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 28px 20px;
+      box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.35);
+    }
+    #pkg-details-modal #modal-pkg-body {
+      overflow-y: auto;
+      max-height: calc(92vh - 130px);
+      padding-right: 6px;
+    }
+    .modal-two-col {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      gap: 22px;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .modal-two-col {
+        grid-template-columns: 1fr;
+      }
+    }
+    .photo-viewport-card {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+    .photo-viewport-header {
+      padding: 8px 12px;
+      background: #0f172a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1e293b;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+    .photo-viewport-img-wrap {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+      overflow: hidden;
+    }
+    .photo-viewport-img-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      transition: opacity 0.25s ease;
+    }
+    .scan-laser-line {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #38bdf8, #60a5fa, transparent);
+      box-shadow: 0 0 14px #38bdf8;
+      animation: scanLaserAnim 1.6s ease-in-out infinite;
+      z-index: 5;
+    }
+    @keyframes scanLaserAnim {
+      0% { top: 0%; opacity: 0.8; }
+      50% { top: 96%; opacity: 1; }
+      100% { top: 0%; opacity: 0.8; }
+    }
+    .btn-analyze-ai {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 20px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      font-size: 0.94rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-analyze-ai:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+      filter: brightness(1.08);
+    }
+    .btn-analyze-ai:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .scenario-pill-btn {
+      padding: 4px 10px;
+      border-radius: 14px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      color: #475569;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .scenario-pill-btn:hover {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    .scenario-pill-btn.active {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      font-weight: 700;
     }
     .modal-card {
       background: #ffffff;
@@ -1801,50 +1921,133 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       closeAllPopovers();
     }
 
-    /* Package Details Modal - Displays Open Box Photograph & AI Verification */
+    /* Global Interactive Inspection State */
+    var currentInspectionPkg = null;
+    var currentInspectionIdx = 0;
+    var currentInspectionScenario = "example_1_correct_order";
+    var currentInspectionPhotoB64 = "";
+    var currentInspectionPhotoUrl = "";
+    var currentInspectionOrder = null;
+
+    /* Package Details Modal - Interactive Product Photo & AI Agent Inspection */
     async function openPackageDetails(idx) {
       var p = packagesData[idx];
       if (!p) return;
-      document.getElementById("modal-pkg-title").innerText = p.id + " — " + p.name;
-      var body = document.getElementById("modal-pkg-body");
-      var scenId = p.scenarioId || "example_1_correct_order";
-      var isSeal = (p.verdict === "SEAL");
+      currentInspectionPkg = p;
+      currentInspectionIdx = idx;
+      currentInspectionScenario = p.scenarioId || "example_1_correct_order";
 
-      body.innerHTML = '<div style="margin-bottom: 14px;">' +
-        '<div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">' +
-          '<span>📸 Open Box Photograph (Packing Station RGB Camera)</span>' +
-          '<span style="font-size: 0.74rem; color: #2563eb; background: #eff6ff; padding: 2px 8px; border-radius: 12px; font-weight: 600;">Station Cam #03</span>' +
+      document.getElementById("modal-pkg-title").innerText = p.id + " — " + p.name + " (" + p.category + ")";
+      var body = document.getElementById("modal-pkg-body");
+
+      body.innerHTML = '<div class="modal-two-col">' +
+        '<!-- LEFT COLUMN: Product Picture & Packaging Station Camera -->' +
+        '<div>' +
+          '<div class="photo-viewport-card">' +
+            '<div class="photo-viewport-header">' +
+              '<span>📸 Station Cam #03 (24-bit RGB Inspection)</span>' +
+              '<span style="display:flex;align-items:center;gap:5px;color:#10b981;">' +
+                '<span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block;"></span> READY' +
+              '</span>' +
+            '</div>' +
+            '<div class="photo-viewport-img-wrap">' +
+              '<div class="scan-laser-line" id="scan-laser-line"></div>' +
+              '<img id="details-box-photo" src="" alt="Product Picture / Open Box Photograph" style="opacity: 0;">' +
+              '<div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading product photo...</div>' +
+            '</div>' +
+          '</div>' +
+
+          '<!-- Scenario Presets & Custom Upload -->' +
+          '<div style="margin-top: 10px;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+              '<span style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Select Inspection Scenario:</span>' +
+              '<label for="custom-photo-upload" style="font-size:0.74rem;font-weight:700;color:#2563eb;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">' +
+                '📁 Upload Photo' +
+                '<input type="file" id="custom-photo-upload" accept="image/*" style="display:none;" onchange="handleCustomPhotoUpload(event)">' +
+              '</label>' +
+            '</div>' +
+            '<div style="display:flex;flex-wrap:wrap;gap:6px;" id="scenario-pill-container">' +
+              '<button class="scenario-pill-btn active" id="btn-scen-example_1_correct_order" onclick="switchInspectionScenario(\'example_1_correct_order\')">✅ Correct Order</button>' +
+              '<button class="scenario-pill-btn" id="btn-scen-example_2_wrong_item" onclick="switchInspectionScenario(\'example_2_wrong_item\')">❌ Wrong Color</button>' +
+              '<button class="scenario-pill-btn" id="btn-scen-example_3_missing_item" onclick="switchInspectionScenario(\'example_3_missing_item\')">❌ Missing Item</button>' +
+              '<button class="scenario-pill-btn" id="btn-scen-example_4_extra_item" onclick="switchInspectionScenario(\'example_4_extra_item\')">❌ Extra Item</button>' +
+              '<button class="scenario-pill-btn" id="btn-scen-example_6_damaged_goods" onclick="switchInspectionScenario(\'example_6_damaged_goods\')">⚠️ Damaged Box</button>' +
+            '</div>' +
+          '</div>' +
+
+          '<!-- Expected Manifest Card -->' +
+          '<div style="margin-top: 12px; padding: 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0;">' +
+            '<div style="font-size:0.76rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;">' +
+              '<span>📋 Expected Order Manifest</span>' +
+              '<span id="manifest-order-id" style="font-family:\'JetBrains Mono\',monospace;color:#2563eb;">ORD-2024-001</span>' +
+            '</div>' +
+            '<div id="manifest-items-list" style="font-size:0.82rem;color:var(--text-main);line-height:1.5;">' +
+              'Loading manifest...' +
+            '</div>' +
+          '</div>' +
         '</div>' +
-        '<div style="position: relative; width: 100%; height: 260px; background: #060911; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; border: 2px dashed #cbd5e1;">' +
-          '<img id="details-box-photo" src="" alt="Open Box Photograph" style="max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0; transition: opacity 0.3s ease;">' +
-          '<div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading Open Box Photograph...</div>' +
+
+        '<!-- RIGHT COLUMN: AI Agent Verification & Controls -->' +
+        '<div>' +
+          '<!-- Metadata Badges -->' +
+          '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;font-size:0.8rem;">' +
+            '<div><strong>ID:</strong> <span class="tracking-code">' + p.id + '</span></div>' +
+            '<div><strong>Status:</strong> <span class="pill-status ' + p.status.toLowerCase().replace(/\s+/g,'') + '" id="detail-pill-status">' + p.status + '</span></div>' +
+            '<div><strong>Hub:</strong> ' + p.location + '</div>' +
+          '</div>' +
+
+          '<!-- Primary "Analyze with AI Agent" Button -->' +
+          '<button class="btn-analyze-ai" id="btn-run-analysis" onclick="runAIAgentAnalysis()">' +
+            '<span style="font-size:1.15rem;">⚡</span>' +
+            '<span id="btn-analyze-text">Analyze with AI Agent</span>' +
+          '</button>' +
+
+          '<!-- Dynamic AI Analysis Results Container -->' +
+          '<div id="ai-analysis-results" style="margin-top: 14px;">' +
+            '<div style="padding: 22px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">' +
+              '<div style="font-size: 1.8rem; margin-bottom: 8px;">🤖</div>' +
+              '<div style="font-weight: 700; color: #1e293b; font-size: 0.92rem;">Ready for Inspection</div>' +
+              '<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">' +
+                'Click <strong>"Analyze with AI Agent"</strong> to verify the open box photograph against the order manifest.' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
         '</div>' +
-      '</div>' +
-      '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; font-size: 0.84rem;">' +
-        '<div><strong>Tracking ID:</strong> <span class="tracking-code">' + p.id + '</span></div>' +
-        '<div><strong>Category:</strong> <span class="pill-category ' + p.category.toLowerCase() + '">' + p.category + '</span></div>' +
-        '<div><strong>Status:</strong> <span class="pill-status ' + p.status.toLowerCase().replace(/\s+/g,'') + '">' + p.status + '</span></div>' +
-        '<div><strong>Hub Location:</strong> ' + p.location + '</div>' +
-      '</div>' +
-      '<div style="padding: 12px 14px; background: ' + (isSeal ? '#ecfdf5' : '#fef2f2') + '; border: 1px solid ' + (isSeal ? '#a7f3d0' : '#fecaca') + '; border-radius: 10px; margin-bottom: 14px;">' +
-        '<div style="font-weight: 700; color: ' + (isSeal ? '#065f46' : '#991b1b') + '; margin-bottom: 2px;">' +
-          'AI Pack Verification Verdict: ' + (isSeal ? '✅ SEAL FOR SHIPPING (PASS)' : '❌ STOP & FIX (HOLD)') +
-        '</div>' +
-        '<div style="font-size: 0.82rem; color: ' + (isSeal ? '#047857' : '#b91c1c') + ';">' +
-          (p.verdictText || 'Package contents inspected against expected manifest.') +
-        '</div>' +
-      '</div>' +
-      '<div style="padding: 10px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.8rem; color: var(--text-muted);">' +
-        '<strong>Visual Verification Note:</strong> Photograph captured at packing station under 24-bit RGB inspection lighting before box seal.' +
       '</div>';
 
       document.getElementById("pkg-details-modal").classList.add("open");
+      await loadInspectionScenario(currentInspectionScenario);
+    }
 
-      // Asynchronously fetch and display the Open Box Photograph from API
+    /* Switch between test scenarios */
+    async function switchInspectionScenario(scenId) {
+      currentInspectionScenario = scenId;
+      var pills = document.querySelectorAll(".scenario-pill-btn");
+      pills.forEach(function(b) { b.classList.remove("active"); });
+      var activeBtn = document.getElementById("btn-scen-" + scenId);
+      if (activeBtn) activeBtn.classList.add("active");
+
+      // Reset analysis container
+      document.getElementById("ai-analysis-results").innerHTML = 
+        '<div style="padding: 18px 14px; text-align: center; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">' +
+          '<div style="font-weight: 700; color: #1e40af; font-size: 0.9rem;">Scenario Updated!</div>' +
+          '<div style="font-size: 0.8rem; color: #3b82f6; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> above to evaluate this product picture.</div>' +
+        '</div>';
+
+      await loadInspectionScenario(scenId);
+    }
+
+    /* Load scenario image and order data from API */
+    async function loadInspectionScenario(scenId) {
       try {
         var resp = await fetch("/api/scenario/" + scenId);
         if (resp.ok) {
           var data = await resp.json();
+          currentInspectionPhotoB64 = data.photo_base64;
+          currentInspectionPhotoUrl = data.photo_data_url;
+          currentInspectionOrder = data.order;
+
+          // Update image
           var img = document.getElementById("details-box-photo");
           var loader = document.getElementById("details-img-loader");
           if (img && data.photo_data_url) {
@@ -1852,11 +2055,246 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             img.style.opacity = "1";
             if (loader) loader.style.display = "none";
           }
+
+          // Update Manifest list
+          var mList = document.getElementById("manifest-items-list");
+          var mId = document.getElementById("manifest-order-id");
+          if (data.order) {
+            if (mId) mId.innerText = data.order.order_id || "ORD-2024-001";
+            if (mList && data.order.items) {
+              mList.innerHTML = data.order.items.map(function(it) {
+                var varTxt = it.variant ? ' <span style="color:#64748b;font-size:0.75rem;">[' + it.variant + ']</span>' : '';
+                return '<div style="display:flex;justify-content:space-between;padding:2px 0;">' +
+                  '<span>&bull; ' + it.name + varTxt + '</span>' +
+                  '<span style="font-weight:700;">Qty: ' + it.expected_qty + '</span>' +
+                '</div>';
+              }).join("");
+            }
+          }
         }
       } catch (err) {
-        console.error("Failed to load box photograph", err);
+        console.error("Failed to load scenario data", err);
       }
     }
+
+    /* Handle Custom Image Upload from User */
+    function handleCustomPhotoUpload(e) {
+      var file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        var dataUrl = evt.target.result;
+        currentInspectionPhotoUrl = dataUrl;
+        currentInspectionPhotoB64 = dataUrl.split(",")[1];
+
+        var img = document.getElementById("details-box-photo");
+        if (img) {
+          img.src = dataUrl;
+          img.style.opacity = "1";
+        }
+
+        // De-select scenario pills
+        var pills = document.querySelectorAll(".scenario-pill-btn");
+        pills.forEach(function(b) { b.classList.remove("active"); });
+
+        document.getElementById("ai-analysis-results").innerHTML = 
+          '<div style="padding: 18px 14px; text-align: center; background: #ecfdf5; border-radius: 12px; border: 1px solid #a7f3d0;">' +
+            '<div style="font-weight: 700; color: #065f46; font-size: 0.9rem;">Custom Product Picture Loaded!</div>' +
+            '<div style="font-size: 0.8rem; color: #047857; margin-top: 4px;">Click <strong>"Analyze with AI Agent"</strong> to inspect your uploaded photo.</div>' +
+          '</div>';
+
+        showToast("Custom product photo uploaded");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* Run the Real AI Agent Analysis */
+    async function runAIAgentAnalysis() {
+      var btn = document.getElementById("btn-run-analysis");
+      var btnText = document.getElementById("btn-analyze-text");
+      var laser = document.getElementById("scan-laser-line");
+      var resultsEl = document.getElementById("ai-analysis-results");
+
+      if (!currentInspectionPhotoB64) {
+        showToast("Please wait for product photo to finish loading");
+        return;
+      }
+
+      btn.disabled = true;
+      if (btnText) btnText.innerText = "Inspecting with AI Agent...";
+      if (laser) laser.style.display = "block";
+
+      // Show animated loading state
+      resultsEl.innerHTML = 
+        '<div style="padding: 24px 16px; text-align: center; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">' +
+          '<div style="display:inline-block;width:32px;height:32px;border:3px solid #bfdbfe;border-top-color:#2563eb;border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:12px;"></div>' +
+          '<div style="font-weight: 700; color: #1e293b; font-size: 0.94rem;">AI Vision Agent Inspecting Contents...</div>' +
+          '<div style="font-size: 0.8rem; color: #64748b; margin-top: 4px; line-height: 1.4;">' +
+            'Analyzing 24-bit RGB photograph, detecting SKU attributes, cross-referencing order quantities and packaging integrity.' +
+          '</div>' +
+        '</div>';
+
+      try {
+        var orderPayload = currentInspectionOrder || {
+          order_id: currentInspectionPkg.id,
+          items: [{ name: currentInspectionPkg.name, expected_qty: 1 }]
+        };
+
+        var resp = await fetch("/api/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order: orderPayload,
+            photo_base64: currentInspectionPhotoB64
+          })
+        });
+
+        if (!resp.ok) {
+          throw new Error("HTTP error " + resp.status);
+        }
+
+        var result = await resp.json();
+        renderAnalysisResult(result);
+      } catch (err) {
+        console.error("AI Analysis failed:", err);
+        resultsEl.innerHTML = 
+          '<div style="padding: 16px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; color: #991b1b; font-size: 0.85rem;">' +
+            '<strong>Analysis Error:</strong> Failed to complete AI Agent verification. ' + err.message +
+          '</div>';
+      } finally {
+        btn.disabled = false;
+        if (btnText) btnText.innerText = "Analyze with AI Agent";
+        if (laser) laser.style.display = "none";
+      }
+    }
+
+    /* Render the Full AI Agent Verification Report */
+    function renderAnalysisResult(res) {
+      var resultsEl = document.getElementById("ai-analysis-results");
+      var isSeal = (res.decision === "SEAL");
+      var isStop = (res.decision === "STOP_FIX");
+      
+      var badgeBg = isSeal ? "#ecfdf5" : (isStop ? "#fef2f2" : "#fffbeb");
+      var badgeBorder = isSeal ? "#a7f3d0" : (isStop ? "#fecaca" : "#fde68a");
+      var badgeColor = isSeal ? "#065f46" : (isStop ? "#991b1b" : "#92400e");
+      var badgeTitle = isSeal ? "✅ SEAL FOR SHIPPING (PASS)" : (isStop ? "❌ STOP & FIX (HOLD)" : "⚠️ UNCERTAIN (MANUAL REVIEW)");
+
+      var confColor = res.confidence === "high" ? "#10b981" : (res.confidence === "medium" ? "#f59e0b" : "#ef4444");
+
+      // Detected items list
+      var detHtml = "";
+      if (res.detected_items && res.detected_items.length) {
+        detHtml = res.detected_items.map(function(d) {
+          var vTxt = d.variant ? ' <span style="color:#64748b;">(' + d.variant + ')</span>' : '';
+          return '<div style="padding: 6px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center;">' +
+            '<span><strong>' + d.detected_qty + 'x</strong> ' + d.name + vTxt + '</span>' +
+            '<span style="font-size:0.72rem;color:#2563eb;background:#eff6ff;padding:2px 6px;border-radius:6px;font-weight:600;">' + d.confidence + '</span>' +
+          '</div>';
+        }).join("");
+      } else {
+        detHtml = '<div style="font-size:0.78rem;color:#94a3b8;">No items detected</div>';
+      }
+
+      // Reconciliation matches
+      var matchRows = "";
+      if (res.matches && res.matches.length) {
+        matchRows = res.matches.map(function(m) {
+          var isPass = (m.status === "PASS");
+          return '<tr>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9;">' + m.item_name + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.expected_qty + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.detected_qty + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #f1f5f9; text-align:right;">' +
+              '<span style="padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; background: ' + (isPass ? '#ecfdf5' : '#fef2f2') + '; color: ' + (isPass ? '#059669' : '#dc2626') + ';">' + m.status + '</span>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+      }
+
+      var hasDamage = res.product_condition && res.product_condition.visible_damage;
+
+      resultsEl.innerHTML = 
+        '<!-- Verdict Header -->' +
+        '<div style="padding: 12px 14px; background: ' + badgeBg + '; border: 1px solid ' + badgeBorder + '; border-radius: 10px; margin-bottom: 12px;">' +
+          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+            '<span style="font-weight: 700; color: ' + badgeColor + '; font-size: 0.92rem;">' + badgeTitle + '</span>' +
+            '<span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #ffffff; color: ' + confColor + '; border: 1px solid #e2e8f0;">' +
+              (res.confidence ? res.confidence.toUpperCase() : 'HIGH') + ' CONFIDENCE' +
+            '</span>' +
+          '</div>' +
+          '<div style="font-size: 0.82rem; color: ' + badgeColor + '; line-height: 1.4;">' +
+            (res.decision_reason || 'Package contents inspected against expected manifest.') +
+          '</div>' +
+        '</div>' +
+
+        '<!-- Detected Items Grid -->' +
+        '<div style="margin-bottom: 10px;">' +
+          '<div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Visual Detections by Agent:</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' + detHtml + '</div>' +
+        '</div>' +
+
+        '<!-- Match Reconciliation Table -->' +
+        (matchRows ? (
+          '<div style="margin-bottom: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">' +
+            '<table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">' +
+              '<thead style="background: #f8fafc; color: var(--text-muted); font-size: 0.72rem;">' +
+                '<tr>' +
+                  '<th style="padding: 6px 8px; text-align: left;">Item</th>' +
+                  '<th style="padding: 6px 8px; text-align: center;">Exp</th>' +
+                  '<th style="padding: 6px 8px; text-align: center;">Det</th>' +
+                  '<th style="padding: 6px 8px; text-align: right;">Match</th>' +
+                '</tr>' +
+              '</thead>' +
+              '<tbody>' + matchRows + '</tbody>' +
+            '</table>' +
+          '</div>'
+        ) : '') +
+
+        '<!-- Packaging Condition -->' +
+        '<div style="padding: 8px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.78rem; display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">' +
+          '<span><strong>Packaging Integrity:</strong> ' + (hasDamage ? '⚠️ Damage Detected' : '✅ Undamaged') + '</span>' +
+          '<span style="color:var(--text-muted);font-size:0.74rem;">' + (res.product_condition ? res.product_condition.notes : '') + '</span>' +
+        '</div>' +
+
+        '<!-- Operator Action Buttons -->' +
+        '<div style="display:flex;gap:8px;margin-bottom:10px;">' +
+          (isSeal ? 
+            '<button onclick="applyDecisionToPackage(\'Delivered\')" style="flex:1;padding:9px;background:#059669;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">✅ Confirm &amp; Seal Carton</button>' :
+            '<button onclick="applyDecisionToPackage(\'Pending\')" style="flex:1;padding:9px;background:#dc2626;color:#ffffff;border:none;border-radius:8px;font-weight:700;font-size:0.84rem;cursor:pointer;">❌ Route to Remediation Station</button>'
+          ) +
+        '</div>' +
+
+        '<!-- Collapsible Canonical Agent JSON -->' +
+        '<details style="margin-top: 6px;">' +
+          '<summary style="font-size: 0.74rem; font-weight: 700; color: #2563eb; cursor: pointer;">🔍 View Canonical Agent JSON Payload</summary>' +
+          '<pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 8px; font-size: 0.72rem; overflow-x: auto; margin-top: 6px; max-height: 180px;">' +
+            JSON.stringify(res, null, 2) +
+          '</pre>' +
+        '</details>';
+
+      // Update package state in table
+      if (currentInspectionPkg) {
+        currentInspectionPkg.verdict = res.decision;
+        currentInspectionPkg.verdictText = res.decision_reason;
+      }
+    }
+
+    /* Apply verdict to update package status */
+    function applyDecisionToPackage(newStatus) {
+      if (currentInspectionPkg) {
+        currentInspectionPkg.status = newStatus;
+        renderTables();
+        var pill = document.getElementById("detail-pill-status");
+        if (pill) {
+          pill.className = "pill-status " + newStatus.toLowerCase().replace(/\s+/g, '');
+          pill.innerText = newStatus;
+        }
+        showToast("Package " + currentInspectionPkg.id + " updated to " + newStatus);
+      }
+      closeDetailsModal();
+    }
+
     function closeDetailsModal() {
       document.getElementById("pkg-details-modal").classList.remove("open");
     }
