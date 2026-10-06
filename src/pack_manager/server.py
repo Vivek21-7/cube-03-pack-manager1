@@ -2401,7 +2401,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         var apiKey = (engine !== "simulation") ? (localStorage.getItem("pack_manager_api_key_" + engine) || "") : null;
 
         if (engine !== "simulation" && !apiKey) {
-          showToast("Notice: No API key entered for " + (engine === "openai" ? "OpenAI" : "Gemini") + ". Utilizing Smart Computer Vision fallback.");
+          showToast("Notice: No API key entered for " + (engine === "openai" ? "OpenAI" : "Gemini") + ". Analysis may fail.");
         }
 
         var resp = await fetch("/api/verify", {
@@ -2733,12 +2733,11 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": f"Invalid base64 image data: {e}"})
                 return
 
-            # Instantiate VLM with graceful fallback if credentials missing
             try:
                 vlm = get_vlm_client(provider=provider, api_key=api_key)
             except ValueError as ve:
-                logger.warning("VLM client init notice: %s. Using Smart Computer Vision fallback.", ve)
-                vlm = get_vlm_client(provider="simulation")
+                self._send_json(400, {"error": f"API Key Required: {ve}"})
+                return
 
             agent = PackManagerAIAgent(vlm_client=vlm)
 
