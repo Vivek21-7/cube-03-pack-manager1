@@ -13,6 +13,7 @@ MatchStatusType = Literal["PASS", "FAIL"]
 
 class OrderItemInput(BaseModel):
     name: str
+    brand: Optional[str] = None
     expected_qty: int = Field(ge=0)
     variant: Optional[str] = None
     sku: Optional[str] = None
@@ -20,6 +21,7 @@ class OrderItemInput(BaseModel):
 
 class DetectedItemAI(BaseModel):
     name: str
+    brand: Optional[str] = None
     detected_qty: int = Field(ge=0)
     variant: Optional[str] = None
     confidence: ConfidenceLevel = "high"
@@ -31,6 +33,7 @@ class MatchResultAI(BaseModel):
     expected_qty: int = Field(ge=0)
     detected_qty: int = Field(ge=0)
     variant_match: bool = True
+    brand_match: bool = True
     status: MatchStatusType = "PASS"
 
 

@@ -25,6 +25,7 @@ Determine whether the box can be SEALED for shipping or must STOP & FIX before s
 
 ### TASK 1: IDENTIFY ITEMS IN BOX
 - List every distinct item visible in the photo
+- Identify the exact product category and BRAND based on visible text, logos, or distinct design
 - Estimate quantity of each item
 - Note color/variant if visible
 - Mark confidence level (high/medium/low) for each identification
@@ -74,11 +75,12 @@ Return ONLY valid JSON (no markdown, no preamble, no code fences):
 {
   "order_id": "ORD-2024-001",
   "order_items": [
-    {"name": "...", "expected_qty": 0, "variant": "..."}
+    {"name": "...", "brand": "...", "expected_qty": 0, "variant": "..."}
   ],
   "detected_items": [
     {
       "name": "...",
+      "brand": "...",
       "detected_qty": 0,
       "variant": "...",
       "confidence": "high|medium|low",
@@ -158,10 +160,11 @@ Reason: Photo quality insufficient to confidently verify contents - request clea
 
 1. **Quantity**: Must be exact. 1 when expecting 2 = FAIL
 2. **Color/Variant**: Must match description. Different color = FAIL
-3. **Item Identity**: Must match SKU description
-4. **Completeness**: All accessories/components must be present
-5. **Confidence**: Only mark HIGH if absolutely certain
-6. **Damage**: Note any visible damage to product or packaging (for reference)
+3. **Brand/Product Identity**: Brand must match expected brand. If brand cannot be reliably determined but identity is required, use "Unknown" for brand and UNCERTAIN decision.
+4. **Item Identity**: Must match SKU description
+5. **Completeness**: All accessories/components must be present
+6. **Confidence**: Only mark HIGH if absolutely certain
+7. **Damage**: Note any visible damage to product or packaging (for reference)
 
 ## WHEN TO USE UNCERTAIN
 

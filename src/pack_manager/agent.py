@@ -78,12 +78,14 @@ def _normalize_order(order_input: Any) -> dict[str, Any]:
                 name = it.get("name") or it.get("product_name") or it.get("sku") or "Item"
                 expected_qty = it.get("expected_qty", 1)
                 variant = it.get("variant")
+                brand = it.get("brand")
                 if not variant and "attributes" in it and isinstance(it["attributes"], dict):
                     variant = it["attributes"].get("color")
                 sku = it.get("sku")
                 items.append(
                     {
                         "name": name,
+                        "brand": brand,
                         "expected_qty": int(expected_qty),
                         "variant": variant,
                         "sku": sku,
@@ -174,14 +176,22 @@ class PackManagerAIAgent:
                     if expected.variant.strip().lower() != det.variant.strip().lower():
                         variant_match = False
                 
+                brand_match = True
+                if expected.brand and det.brand:
+                    if expected.brand.strip().lower() != det.brand.strip().lower() and det.brand.lower() != "unknown":
+                        brand_match = False
+                elif expected.brand and det.brand == "unknown":
+                    pass # Handled by confidence or notes usually, but we'll let it pass identity and let the user review
+                
                 detected_qty = det.detected_qty
-                status = "PASS" if detected_qty == expected.expected_qty and variant_match else "FAIL"
+                status = "PASS" if detected_qty == expected.expected_qty and variant_match and brand_match else "FAIL"
                 
                 matches.append(MatchResultAI(
                     item_name=expected.name,
                     expected_qty=expected.expected_qty,
                     detected_qty=detected_qty,
                     variant_match=variant_match,
+                    brand_match=brand_match,
                     status=status
                 ))
                 
@@ -227,15 +237,22 @@ class PackManagerAIAgent:
         has_failed_match = any(m.status == "FAIL" for m in matches)
         has_damage = response.product_condition.visible_damage
 
-        if any(d.confidence == "low" for d in response.detected_items) or response.confidence == "low":
+        if any(d.confidence == "low" for d in response.detected_items) or response.confidence == "low" or any(d.brand == "Unknown" for d in response.detected_items):
             response.decision = "UNCERTAIN"
-            response.decision_reason = "Photo quality insufficient to confidently verify contents - request clearer image."
+            response.decision_reason = "Photo quality insufficient or brand identity unclear - request clearer image."
         elif has_missing or has_extra or has_failed_match or has_damage:
             response.decision = "STOP_FIX"
             reasons = []
             if has_missing: reasons.append(f"Missing {sum(m.expected_qty for m in missing_items)} item(s)")
             if has_extra: reasons.append(f"Extra {sum(e.qty for e in extra_items)} item(s)")
-            if has_failed_match and not has_missing and not has_extra: reasons.append("Variant/color mismatch")
+            if has_failed_match and not has_missing and not has_extra:
+                failed = [m for m in matches if m.status == "FAIL"]
+                if any(not m.brand_match for m in failed):
+                    reasons.append("Brand/product mismatch")
+                elif any(not m.variant_match for m in failed):
+                    reasons.append("Variant/color mismatch")
+                else:
+                    reasons.append("Quantity mismatch")
             if has_damage: reasons.append("Visible damage detected")
             response.decision_reason = " | ".join(reasons) + "."
         else:
