@@ -302,7 +302,6 @@ class SimulationVLMClient:
         extra = []
         mismatch_reasons = []
 
-        # Check if the order expects apparel vs electronics
         has_apparel_expected = any(
             any(k in it.get("name", "").lower() for k in ["shirt", "t-shirt", "cap", "hat", "apparel", "cloth", "garment", "hoodie", "pants"])
             for it in order_items
@@ -313,7 +312,8 @@ class SimulationVLMClient:
         )
 
         # Catalog detected physical objects in scene
-        if is_electronic_device:
+        if is_electronic_device or (has_electronics_expected and (dark_casing_pct > 5.0 or edge_density > 1.5)):
+            is_electronic_device = True
             elec_item = next(
                 (it for it in order_items if any(k in it.get("name", "").lower() for k in ["electronic", "camera", "gadget", "device", "lens", "phone", "hardware", "sensor", "goods"])),
                 None,
@@ -321,7 +321,7 @@ class SimulationVLMClient:
             detected.append({
                 "name": elec_item["name"] if elec_item else "Electronic Hardware Device / Action Camera",
                 "detected_qty": elec_item.get("expected_qty", 1) if elec_item else 1,
-                "variant": "matte-black/grey",
+                "variant": elec_item.get("variant", "matte-black/grey") if elec_item else "matte-black/grey",
                 "confidence": "high",
                 "notes": f"Rigid electronic hardware detected with optical sensor (dark casing: {dark_casing_pct:.1f}%, lens/dial element: {bright_lens_pct:.1f}%)"
             })
@@ -361,16 +361,17 @@ class SimulationVLMClient:
 
         if has_black_apparel:
             black_item = next(
-                (it for it in order_items if "black" in (it.get("name", "") + " " + str(it.get("variant", ""))).lower()),
+                (it for it in order_items if "black" in (it.get("name", "") + " " + str(it.get("variant", ""))).lower() and any(k in it.get("name", "").lower() for k in ["shirt", "t-shirt", "cap", "hat", "apparel", "cloth", "garment", "hoodie", "pants"])),
                 None,
             )
-            detected.append({
-                "name": black_item["name"] if black_item else "Black T-Shirt",
-                "detected_qty": black_item.get("expected_qty", 1) if black_item else 1,
-                "variant": "black",
-                "confidence": "high",
-                "notes": f"Dark fabric apparel detected ({dark_casing_pct:.1f}% dark garment profile)"
-            })
+            if black_item:
+                detected.append({
+                    "name": black_item["name"],
+                    "detected_qty": black_item.get("expected_qty", 1),
+                    "variant": "black",
+                    "confidence": "high",
+                    "notes": f"Dark fabric apparel detected ({dark_casing_pct:.1f}% dark garment profile)"
+                })
 
         # Manifest reconciliation
         for it in order_items:
