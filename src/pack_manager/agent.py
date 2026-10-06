@@ -18,6 +18,9 @@ from PIL import Image
 from pack_manager.agent_schemas import (
     OrderItemInput,
     PackManagerAIResponse,
+    MatchResultAI,
+    MissingItemAI,
+    ExtraItemAI,
 )
 from pack_manager.models import BoundingBox, DetectedItem, Order, PackEvent
 from pack_manager.prompts import build_user_prompt
@@ -136,9 +139,111 @@ class PackManagerAIAgent:
             logger.error("VLM did not return valid JSON. Raw output:\n%s", raw_output)
             raise ValueError(f"Failed to parse VLM response as JSON: {exc}") from exc
 
-        # Validate with strict schema and safety guardrails
+        # First, ensure we have the expected order items in the parsed response
+        if "order_items" not in parsed or not parsed["order_items"]:
+            parsed["order_items"] = order_dict["items"]
+
+        # Validate base structure (LLM output)
         response = PackManagerAIResponse.model_validate(parsed)
-        return response
+        
+        # Enforce deterministic comparison engine
+        return self._reconcile_inspection_result(response)
+
+    def _reconcile_inspection_result(self, response: PackManagerAIResponse) -> PackManagerAIResponse:
+        matches = []
+        missing_items = []
+        extra_items = []
+        
+        detected_unmatched = list(response.detected_items)
+        
+        for expected in response.order_items:
+            best_match_idx = -1
+            for i, det in enumerate(detected_unmatched):
+                if det.name.lower() == expected.name.lower():
+                    best_match_idx = i
+                    break
+                if expected.name.lower() in det.name.lower() or det.name.lower() in expected.name.lower():
+                    best_match_idx = i
+                    break
+            
+            if best_match_idx >= 0:
+                det = detected_unmatched.pop(best_match_idx)
+                variant_match = True
+                if expected.variant and det.variant:
+                    # Ignore case and spacing
+                    if expected.variant.strip().lower() != det.variant.strip().lower():
+                        variant_match = False
+                
+                detected_qty = det.detected_qty
+                status = "PASS" if detected_qty == expected.expected_qty and variant_match else "FAIL"
+                
+                matches.append(MatchResultAI(
+                    item_name=expected.name,
+                    expected_qty=expected.expected_qty,
+                    detected_qty=detected_qty,
+                    variant_match=variant_match,
+                    status=status
+                ))
+                
+                if detected_qty < expected.expected_qty:
+                    missing_items.append(MissingItemAI(
+                        item_name=expected.name,
+                        expected_qty=expected.expected_qty - detected_qty,
+                        reason=f"Detected {detected_qty} but expected {expected.expected_qty}"
+                    ))
+                elif detected_qty > expected.expected_qty:
+                    extra_items.append(ExtraItemAI(
+                        item_name=expected.name,
+                        qty=detected_qty - expected.expected_qty,
+                        notes=f"Detected {detected_qty} but expected {expected.expected_qty}"
+                    ))
+            else:
+                matches.append(MatchResultAI(
+                    item_name=expected.name,
+                    expected_qty=expected.expected_qty,
+                    detected_qty=0,
+                    variant_match=False,
+                    status="FAIL"
+                ))
+                missing_items.append(MissingItemAI(
+                    item_name=expected.name,
+                    expected_qty=expected.expected_qty,
+                    reason="Not visible in box"
+                ))
+                
+        for det in detected_unmatched:
+            extra_items.append(ExtraItemAI(
+                item_name=det.name,
+                qty=det.detected_qty,
+                notes="Not in order"
+            ))
+            
+        response.matches = matches
+        response.missing_items = missing_items
+        response.extra_items = extra_items
+        
+        has_missing = len(missing_items) > 0
+        has_extra = len(extra_items) > 0
+        has_failed_match = any(m.status == "FAIL" for m in matches)
+        has_damage = response.product_condition.visible_damage
+
+        if any(d.confidence == "low" for d in response.detected_items) or response.confidence == "low":
+            response.decision = "UNCERTAIN"
+            response.decision_reason = "Photo quality insufficient to confidently verify contents - request clearer image."
+        elif has_missing or has_extra or has_failed_match or has_damage:
+            response.decision = "STOP_FIX"
+            reasons = []
+            if has_missing: reasons.append(f"Missing {sum(m.expected_qty for m in missing_items)} item(s)")
+            if has_extra: reasons.append(f"Extra {sum(e.qty for e in extra_items)} item(s)")
+            if has_failed_match and not has_missing and not has_extra: reasons.append("Variant/color mismatch")
+            if has_damage: reasons.append("Visible damage detected")
+            response.decision_reason = " | ".join(reasons) + "."
+        else:
+            response.decision = "SEAL"
+            response.decision_reason = "All expected items present, correct quantity, correct variant, NO extra items."
+
+        # Return validated response to ensure schema compliance
+        return PackManagerAIResponse.model_validate(response.model_dump())
 
     def as_vision_backend(self) -> AgentVisionBackend:
         """Return a VisionBackend adapter that can plug into existing pipeline.evaluate_pack."""
