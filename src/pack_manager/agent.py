@@ -99,7 +99,18 @@ def _normalize_order(order_input: Any) -> dict[str, Any]:
 def _load_image_bytes(photo: Path | str | bytes | Image.Image) -> tuple[bytes, str]:
     """Extract raw image bytes and mime type from multiple formats."""
     if isinstance(photo, bytes):
-        return photo, "image/png"
+        mime = "image/png"
+        try:
+            fmt = Image.open(io.BytesIO(photo)).format
+            if fmt == "JPEG":
+                mime = "image/jpeg"
+            elif fmt == "WEBP":
+                mime = "image/webp"
+            elif fmt == "PNG":
+                mime = "image/png"
+        except Exception:
+            pass
+        return photo, mime
 
     if isinstance(photo, Image.Image):
         buf = io.BytesIO()

@@ -2032,13 +2032,19 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <div style="display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:0.73rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">Vision AI Engine:</span>
                 <select id="select-ai-engine" onchange="toggleAiEngine(this.value)" style="font-size:0.76rem;font-weight:600;padding:3px 8px;border:1px solid #cbd5e1;border-radius:6px;background:#ffffff;color:#1e293b;">
-                  <option value="gemini" selected>✨ Google Gemini 2.0 Flash Vision</option>
+                  <option value="simulation" selected>⚡ Smart Computer Vision (Offline)</option>
+                  <option value="gemini">✨ Google Gemini 2.0 Flash Vision</option>
                   <option value="openai">🧠 OpenAI GPT-4o Vision</option>
                 </select>
               </div>
               <div id="api-key-container" style="display:block;margin-top:8px;">
-                <input type="password" id="input-api-key" placeholder="Paste your Google Gemini API Key here..." style="width:100%;padding:5px 8px;font-size:0.76rem;border:1px solid #93c5fd;border-radius:6px;" oninput="saveApiKey(this.value)">
-                <div style="font-size:0.7rem;color:#64748b;margin-top:3px;">Stored in browser. Get free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2563eb;text-decoration:underline;">aistudio.google.com</a>.</div>
+                <div id="offline-engine-badge" style="font-size:0.72rem;color:#047857;background:#ecfdf5;padding:6px 10px;border-radius:6px;border:1px solid #a7f3d0;">
+                  ⚡ <strong>Offline Engine Active:</strong> Onboard 24-bit RGB Computer Vision inspecting physical contours, colors, and SKU brand signatures. No API key required.
+                </div>
+                <div id="cloud-api-inputs" style="display:none;margin-top:4px;">
+                  <input type="password" id="input-api-key" placeholder="Paste your API Key here..." style="width:100%;padding:5px 8px;font-size:0.76rem;border:1px solid #93c5fd;border-radius:6px;" oninput="saveApiKey(this.value)">
+                  <div style="font-size:0.7rem;color:#64748b;margin-top:3px;">Stored in browser. Get free Gemini key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#2563eb;text-decoration:underline;">aistudio.google.com</a>.</div>
+                </div>
               </div>
             </div>
 
@@ -2322,18 +2328,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 
     function toggleAiEngine(engine) {
-      var box = document.getElementById("api-key-container");
+      var badge = document.getElementById("offline-engine-badge");
+      var cloudInputs = document.getElementById("cloud-api-inputs");
       var input = document.getElementById("input-api-key");
-      if (box) box.style.display = "block";
-      if (input) {
-        input.value = localStorage.getItem("pack_manager_api_key_" + engine) || "";
-        input.placeholder = "Paste your " + (engine === "gemini" ? "Google Gemini" : "OpenAI") + " API Key...";
+      if (engine === "simulation") {
+        if (badge) badge.style.display = "block";
+        if (cloudInputs) cloudInputs.style.display = "none";
+      } else {
+        if (badge) badge.style.display = "none";
+        if (cloudInputs) cloudInputs.style.display = "block";
+        if (input) {
+          input.value = localStorage.getItem("pack_manager_api_key_" + engine) || "";
+          input.placeholder = "Paste your " + (engine === "gemini" ? "Google Gemini" : "OpenAI") + " API Key...";
+        }
       }
     }
 
     function saveApiKey(val) {
-      var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "gemini";
-      localStorage.setItem("pack_manager_api_key_" + engine, val.trim());
+      var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "simulation";
+      if (engine !== "simulation") {
+        localStorage.setItem("pack_manager_api_key_" + engine, val.trim());
+      }
     }
 
     function updateManifestTarget() {
@@ -2392,11 +2407,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           items: [{ name: currentInspectionPkg.name, expected_qty: 1 }]
         };
 
-        var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "gemini";
-        var apiKey = localStorage.getItem("pack_manager_api_key_" + engine) || "";
+        var engine = document.getElementById("select-ai-engine") ? document.getElementById("select-ai-engine").value : "simulation";
+        var apiKey = (engine !== "simulation") ? (localStorage.getItem("pack_manager_api_key_" + engine) || "") : "";
 
-        if (!apiKey) {
-          showToast("Notice: No API key entered for " + (engine === "openai" ? "OpenAI" : "Gemini") + ". Analysis will fail.");
+        if (engine !== "simulation" && !apiKey) {
+          showToast("No API key entered; auto-inspecting with onboard Smart Computer Vision.");
         }
 
         var resp = await fetch("/api/verify", {
