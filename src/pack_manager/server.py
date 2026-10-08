@@ -2764,6 +2764,18 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
             self._send_html(HTML_TEMPLATE)
             return
 
+        if path == "/health":
+            self._send_json(
+                200,
+                {
+                    "ok": True,
+                    "stage": "pack",
+                    "agent_id": "pack-manager@1.0.0",
+                    "round3": {"run": "/run", "contract": "agent-output/evidence v1.0"},
+                },
+            )
+            return
+
         if path == "/api/scenarios":
             scenarios = [
                 {"id": "example_7_electronics_order", "title": "Example 7: Electronics Order (SEAL)"},
@@ -2808,6 +2820,20 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
         self._send_json(404, {"error": "Not found"})
 
     def do_POST(self) -> None:
+        parsed = urlparse(self.path)
+        if parsed.path == "/run":
+            from pack_manager.round3 import run_pack_round3
+
+            length = int(self.headers.get("Content-Length", 0))
+            try:
+                body = json.loads(self.rfile.read(length) or b"{}")
+            except Exception as exc:
+                self._send_json(400, {"error": f"Invalid JSON payload: {exc}"})
+                return
+            status, payload = run_pack_round3(body)
+            self._send_json(status, payload)
+            return
+
         if self.path == "/api/verify":
             length = int(self.headers.get("Content-Length", 0))
             body = self.rfile.read(length)

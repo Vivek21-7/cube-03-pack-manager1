@@ -17,3 +17,4 @@ scratch/
 *.onnx
 .DS_Store
 .env.local
+/data/round3-evidence/

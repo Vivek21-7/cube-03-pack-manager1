@@ -250,7 +250,7 @@ class AnthropicVLMClient:
     def __init__(
         self,
         api_key: str | None = None,
-        model_name: str = "claude-3-5-sonnet-20241022",
+        model_name: str = "claude-sonnet-4-5",
         timeout: float = 60.0,
     ) -> None:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
@@ -285,7 +285,6 @@ class AnthropicVLMClient:
                     ],
                 }
             ],
-            "temperature": 0.1,
         }
 
         with httpx.Client(timeout=self.timeout) as client:
@@ -329,7 +328,6 @@ class AnthropicVLMClient:
                     ],
                 }
             ],
-            "temperature": 0.1,
         }
 
         with httpx.Client(timeout=self.timeout) as client:
@@ -1304,27 +1302,29 @@ def get_vlm_client(
     if chosen in ("anthropic", "claude"):
         if api_key or os.getenv("ANTHROPIC_API_KEY"):
             return AnthropicVLMClient(
-                api_key=api_key, model_name=model or "claude-3-5-sonnet-20241022"
+                api_key=api_key, model_name=model or os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-5"
             )
         return SimulationVLMClient(model_name=model or "simulation-vlm-1.0")
 
-    if chosen in ("simulation", "mock", "offline", ""):
+    if chosen in ("simulation", "mock", "offline"):
         return SimulationVLMClient(model_name=model or "simulation-vlm-1.0")
 
-    # Auto-detection from environment keys
-    if (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")) and not api_key:
-        return GeminiVLMClient(model_name=model or "gemini-2.0-flash")
+    # Round 3 default: the operator's Anthropic key, not a teammate Gemini key.
+    if os.getenv("ANTHROPIC_API_KEY") and not api_key:
+        return AnthropicVLMClient(
+            model_name=model or os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-5"
+        )
     if os.getenv("OPENAI_API_KEY") and not api_key:
         return OpenAIVLMClient(model_name=model or "gpt-4o")
-    if os.getenv("ANTHROPIC_API_KEY") and not api_key:
-        return AnthropicVLMClient(model_name=model or "claude-3-5-sonnet-20241022")
+    if (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")) and not api_key:
+        return GeminiVLMClient(model_name=model or "gemini-2.0-flash")
 
     # If an API key was explicitly passed without provider, try gemini then openai
     if api_key:
         if api_key.startswith("AIza"):
             return GeminiVLMClient(api_key=api_key, model_name=model or "gemini-2.0-flash")
         if api_key.startswith("sk-ant-"):
-            return AnthropicVLMClient(api_key=api_key, model_name=model or "claude-3-5-sonnet-20241022")
+            return AnthropicVLMClient(api_key=api_key, model_name=model or "claude-sonnet-4-5")
         if api_key.startswith("sk-"):
             return OpenAIVLMClient(api_key=api_key, model_name=model or "gpt-4o")
 
