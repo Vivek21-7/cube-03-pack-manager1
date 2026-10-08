@@ -116,12 +116,12 @@ def to_pack_agent_output(
 
 def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tuple[int, dict[str, Any]]:
     if not body.get("request_id") or not body.get("workflow_id") or not (body.get("subject") or {}).get("org_id"):
-        return 400, {"error": "request_id, workflow_id, and subject.org_id are required"}
+        return 422, {"error": "request_id, workflow_id, and subject.org_id are required"}
     subject = body["subject"]
     if not subject.get("subject_id"):
-        return 400, {"error": "subject.subject_id is required"}
+        return 422, {"error": "subject.subject_id is required"}
     if body.get("stage") and body["stage"] != "pack":
-        return 400, {"error": "stage must be pack"}
+        return 422, {"error": "stage must be pack"}
     if subject["org_id"] not in DEMO_ORGS:
         return 404, {"error": "unknown tenant"}
 
