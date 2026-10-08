@@ -125,9 +125,13 @@ For each expected item:
 
 ### TASK 4: MAKE DECISION
 Decision Logic:
-- **SEAL**: All expected items present, correct quantity, correct variant, NO extra items
-- **STOP & FIX**: Any mismatch, missing item, extra item, or damage to product
-- **UNCERTAIN**: Photo quality too poor, items too obscured, cannot confidently verify
+- **SEAL**: All expected items present, correct quantity, correct variant, NO extra items, and the product itself is intact
+- **STOP & FIX**: Any mismatch, missing item, extra item, or damage to the product itself
+- **UNCERTAIN**: Photo quality too poor, items too obscured, cannot confidently verify, or the carton is still closed so the contents cannot be seen
+- A closed, taped, or strapped carton is UNCERTAIN. Do not imagine the units inside.
+- A named cable, charger, adapter, remote, or box that is not in the frame is MISSING. Do not treat the retail carton as proof the accessory is inside.
+- A second unit that is a different model, colour, or shape is an extra or wrong item, not a match.
+- A crushed or dented outer carton with the products themselves intact is not product damage. Set visible_damage false and describe the carton in notes. Set visible_damage true only when the product is torn, cracked, leaking, or crushed.
 
 ## CRITICAL CONSTRAINTS
 - DO NOT invent items

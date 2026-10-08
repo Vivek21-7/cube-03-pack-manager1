@@ -1,0 +1,13 @@
+{
+  "order_id": "RTN-001",
+  "items": [
+    {
+      "name": "Samsung Book laptop",
+      "expected_qty": 1
+    },
+    {
+      "name": "cable",
+      "expected_qty": 1
+    }
+  ]
+}

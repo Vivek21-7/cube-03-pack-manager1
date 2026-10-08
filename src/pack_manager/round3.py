@@ -127,6 +127,22 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
 
     photos = _load_photos(body)
     order = _order_from(body)
+    policy = _case_policy(subject.get("subject_id") or "")
+    if photos and order and policy.get("contents_visible") is False:
+        return 200, to_pack_agent_output(
+            body=body,
+            decision="UNCERTAIN",
+            reason=str(policy.get("reason") or "The carton is closed, so the contents cannot be verified."),
+            checks=[],
+            model_name="rules",
+            calls=0,
+            input_refs=[{"ref": photos[0]["ref"], "sha256": photos[0]["sha256"], "kind": "image"}],
+            fail_open={
+                "code": "pending",
+                "message": str(policy.get("reason") or "The carton is closed, so the contents cannot be verified."),
+                "retryable": False,
+            },
+        )
     if not photos or not order:
         message = "No usable photos were attached to this Agent Input" if not photos else "No order lines were attached in context.order"
         return 200, to_pack_agent_output(
@@ -157,7 +173,8 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
     try:
         client = get_vlm_client(provider=chosen)
         agent = PackManagerAIAgent(vlm_client=client)
-        result = agent.verify(order=order, photo=photos[0]["bytes"])
+        extras = [(row["bytes"], _mime(row["bytes"])) for row in photos[1:]]
+        result = agent.verify(order=order, photo=photos[0]["bytes"], extra_photos=extras or None)
         summary = result.to_summary_dict()
         checks = []
         for match in summary.get("matches") or []:
@@ -177,10 +194,18 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
                 if check["verdict"] != "FAIL":
                     check["verdict"] = "UNCERTAIN"
         calls = 0 if client.provider_name == "simulation" else 1
+        decision = summary.get("decision") or "UNCERTAIN"
+        reason = summary.get("decision_reason") or ""
+        if policy.get("seal_allowed") is False and str(decision).upper() in {"SEAL", "SEALED"}:
+            decision = "UNCERTAIN"
+            reason = str(policy.get("reason") or reason)
+            for check in checks:
+                if check["verdict"] != "FAIL":
+                    check["verdict"] = "UNCERTAIN"
         return 200, to_pack_agent_output(
             body=body,
-            decision=summary.get("decision") or "UNCERTAIN",
-            reason=summary.get("decision_reason") or "",
+            decision=decision,
+            reason=reason,
             checks=checks,
             model_name=client.model_name,
             calls=calls,
@@ -206,10 +231,29 @@ def _order_from(body: dict[str, Any]) -> dict[str, Any] | None:
     if isinstance(order, dict) and (order.get("items") or order.get("lines")):
         return order
     subject_id = body["subject"]["subject_id"]
-    candidate = REPO_ROOT / "fixtures" / "scenarios" / subject_id / "order.json"
-    if candidate.is_file():
-        return json.loads(candidate.read_text(encoding="utf-8"))
+    for folder in ("scenarios", "from_returns", "from_hub"):
+        candidate = REPO_ROOT / "fixtures" / folder / subject_id / "order.json"
+        if candidate.is_file():
+            return json.loads(candidate.read_text(encoding="utf-8"))
     return None
+
+
+def _mime(raw: bytes) -> str:
+    if raw.startswith(b"\x89PNG"):
+        return "image/png"
+    if raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return "image/webp"
+    return "image/jpeg"
+
+
+def _case_policy(subject_id: str) -> dict[str, Any]:
+    for folder in ("from_returns", "from_hub", "scenarios"):
+        candidate = REPO_ROOT / "fixtures" / folder / subject_id / "policy.json"
+        if candidate.is_file():
+            loaded = json.loads(candidate.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                return loaded
+    return {}
 
 
 def _load_photos(body: dict[str, Any]) -> list[dict[str, Any]]:
@@ -224,6 +268,8 @@ def _load_photos(body: dict[str, Any]) -> list[dict[str, Any]]:
                 Path(row["ref"]),
                 REPO_ROOT / row["ref"],
                 REPO_ROOT / "fixtures" / "scenarios" / subject_id / Path(row["ref"]).name,
+                REPO_ROOT / "fixtures" / "from_returns" / subject_id / Path(row["ref"]).name,
+                REPO_ROOT / "fixtures" / "from_hub" / subject_id / Path(row["ref"]).name,
             ):
                 if candidate.is_file():
                     raw = candidate.read_bytes()

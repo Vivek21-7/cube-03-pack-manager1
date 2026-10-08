@@ -28,6 +28,24 @@ def test_pack_envelope() -> None:
     assert len(output["evidence"]["content_hash"]) == 64
 
 
+def test_closed_shipper_does_not_seal(monkeypatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    status, output = run_pack_round3(
+        {
+            "request_id": "req-closed",
+            "workflow_id": "WF-closed",
+            "stage": "pack",
+            "subject": {"org_id": "org_demo_alpha", "subject_id": "HUB-CLINDACAN-600"},
+            "inputs": [{"ref": "carton.jpg"}],
+        }
+    )
+    assert status == 200
+    assert output["status"] == "pending"
+    assert output["verdict"] == "UNCERTAIN"
+    assert output["model"]["calls"] == 0
+    assert "closed" in output["evidence"]["decision"]["reason"].lower()
+
+
 def test_missing_photo_fail_open(monkeypatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     status, output = run_pack_round3(

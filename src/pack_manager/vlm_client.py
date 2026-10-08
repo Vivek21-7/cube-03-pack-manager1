@@ -251,7 +251,7 @@ class AnthropicVLMClient:
         self,
         api_key: str | None = None,
         model_name: str = "claude-sonnet-4-5",
-        timeout: float = 60.0,
+        timeout: float = 120.0,
     ) -> None:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
@@ -262,29 +262,40 @@ class AnthropicVLMClient:
         self.provider_name = "anthropic"
         self.timeout = timeout
 
-    def inspect(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
-        b64_img = base64.b64encode(image_bytes).decode("ascii")
-
+    def inspect(
+        self,
+        prompt: str,
+        image_bytes: bytes,
+        mime_type: str = "image/png",
+        extra_images: list[tuple[bytes, str]] | None = None,
+    ) -> str:
+        content: list[dict[str, Any]] = [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": mime_type,
+                    "data": base64.b64encode(image_bytes).decode("ascii"),
+                },
+            }
+        ]
+        for extra, extra_mime in extra_images or []:
+            content.append(
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": extra_mime,
+                        "data": base64.b64encode(extra).decode("ascii"),
+                    },
+                }
+            )
+        content.append({"type": "text", "text": prompt})
         payload = {
             "model": self.model_name,
             "max_tokens": 4096,
             "system": PACK_MANAGER_SYSTEM_PROMPT,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": mime_type,
-                                "data": b64_img,
-                            },
-                        },
-                        {"type": "text", "text": prompt},
-                    ],
-                }
-            ],
+            "messages": [{"role": "user", "content": content}],
         }
 
         with httpx.Client(timeout=self.timeout) as client:

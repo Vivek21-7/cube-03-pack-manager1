@@ -135,6 +135,48 @@ def _load_image_bytes(photo: Path | str | bytes | Image.Image) -> tuple[bytes, s
     return path.read_bytes(), mime
 
 
+_NAME_ALIASES = {
+    "notebook": "laptop",
+    "book": "laptop",
+    "cord": "cable",
+    "lead": "cable",
+    "charger": "adapter",
+    "adaptor": "adapter",
+}
+
+
+def _names_refer_to_same_item(expected: str, detected: str) -> bool:
+    left = (expected or "").strip().lower()
+    right = (detected or "").strip().lower()
+    if not left or not right:
+        return False
+    if left == right or left in right or right in left:
+        return True
+
+    def tokens(value: str) -> set[str]:
+        out = set()
+        for token in re.findall(r"[a-z0-9]+", value):
+            if len(token) < 3:
+                continue
+            out.add(_NAME_ALIASES.get(token, token))
+        return out
+
+    overlap = tokens(left) & tokens(right)
+    return len(overlap) >= 2
+
+
+def _product_itself_damaged(condition: Any) -> bool:
+    """A crushed outer carton is not damage to the unit inside it."""
+    if not getattr(condition, "visible_damage", False):
+        return False
+    notes = str(getattr(condition, "notes", "") or "").lower()
+    carton = any(word in notes for word in ("carton", "outer box", "shipping box", "shipper"))
+    product = any(word in notes for word in ("product", "screen", "device", "leak", "cracked", "torn"))
+    if carton and not product:
+        return False
+    return True
+
+
 class PackManagerAIAgent:
     """The Real AI Logistics Inspector Agent executing order verification via Vision LLM."""
 
@@ -373,13 +415,24 @@ class PackManagerAIAgent:
         self,
         order: dict[str, Any] | Order | Path | str,
         photo: Path | str | bytes | Image.Image,
+        extra_photos: list[tuple[bytes, str]] | None = None,
     ) -> PackManagerAIResponse:
         """Analyze box photograph against expected order and output canonical verification response."""
         order_dict = _normalize_order(order)
         image_bytes, mime_type = _load_image_bytes(photo)
 
         prompt = build_user_prompt(order_dict)
-        raw_output = self.vlm.inspect(prompt, image_bytes, mime_type=mime_type)
+        if extra_photos:
+            prompt += (
+                "\n\nThe attached images are different views of the same unit, in order. "
+                "Count an item if it is visible in any view. Do not count the same physical item twice."
+            )
+        try:
+            raw_output = self.vlm.inspect(
+                prompt, image_bytes, mime_type=mime_type, extra_images=extra_photos or None
+            )
+        except TypeError:
+            raw_output = self.vlm.inspect(prompt, image_bytes, mime_type=mime_type)
         cleaned_json = _clean_json_markdown(raw_output)
 
         try:
@@ -408,10 +461,7 @@ class PackManagerAIAgent:
         for expected in response.order_items:
             best_match_idx = -1
             for i, det in enumerate(detected_unmatched):
-                if det.name.lower() == expected.name.lower():
-                    best_match_idx = i
-                    break
-                if expected.name.lower() in det.name.lower() or det.name.lower() in expected.name.lower():
+                if _names_refer_to_same_item(expected.name, det.name):
                     best_match_idx = i
                     break
             
@@ -482,11 +532,13 @@ class PackManagerAIAgent:
         has_missing = len(missing_items) > 0
         has_extra = len(extra_items) > 0
         has_failed_match = any(m.status == "FAIL" for m in matches)
-        has_damage = response.product_condition.visible_damage
+        has_damage = _product_itself_damaged(response.product_condition)
 
         if any(d.confidence == "low" for d in response.detected_items) or response.confidence == "low" or any(d.brand == "Unknown" for d in response.detected_items):
             response.decision = "UNCERTAIN"
-            response.decision_reason = "Photo quality insufficient or brand identity unclear - request clearer image."
+            response.decision_reason = (
+                "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed."
+            )
         elif has_missing or has_extra or has_failed_match or has_damage:
             response.decision = "STOP_FIX"
             reasons = []

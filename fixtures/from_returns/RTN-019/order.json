@@ -1,0 +1,17 @@
+{
+  "order_id": "RTN-019",
+  "items": [
+    {
+      "name": "NOVA hair straightener",
+      "expected_qty": 1
+    },
+    {
+      "name": "power cord",
+      "expected_qty": 1
+    },
+    {
+      "name": "NOVA box",
+      "expected_qty": 1
+    }
+  ]
+}
