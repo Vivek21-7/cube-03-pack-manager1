@@ -1,0 +1,5 @@
+{
+  "expected_decision": "STOP_FIX",
+  "scenario_type": "wrong_quantity",
+  "notes": "Order expects 3 black t-shirts, but carton only contains 2 units (under-pack)."
+}

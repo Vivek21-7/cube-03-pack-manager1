@@ -1,0 +1,5 @@
+{
+  "expected_decision": "STOP_FIX",
+  "scenario_type": "missing_item",
+  "notes": "User manual DOC-MANUAL-01 ordered but not visible in carton."
+}

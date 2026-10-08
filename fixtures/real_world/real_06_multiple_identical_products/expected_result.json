@@ -1,0 +1,5 @@
+{
+  "expected_decision": "SEAL",
+  "scenario_type": "multiple_identical_products",
+  "notes": "Multiple discrete instances of TSHIRT-BLK-M (obj-1 and obj-2) aggregate correctly to quantity 2."
+}

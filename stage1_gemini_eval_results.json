@@ -1,0 +1,300 @@
+{
+  "evaluation_title": "Live Gemini validation on synthetic package fixtures",
+  "evaluation_type": "Synthetic package fixtures (Not real-world warehouse validation)",
+  "limitation_note": "The Gemini tests used real Gemini API calls, but the images are synthetic fixture images. Documented as 'Live Gemini validation on synthetic package fixtures', not as real-world warehouse validation. Real photographs will be added to the evaluation suite later.",
+  "runs": [
+    {
+      "test": "REAL GEMINI TEST 1",
+      "desc": "Clear / Correct Package Image",
+      "image_path": "fixtures/scenarios/example_1_correct_order/box_photo.png",
+      "observation": {
+        "image_id": "box_photo",
+        "image_quality": "clear",
+        "clarity_score": 1.0,
+        "container": {
+          "container_type": "cardboard_box",
+          "visible_damage": false,
+          "damage_notes": "None",
+          "bbox": {
+            "ymin": 0.02,
+            "xmin": 0.02,
+            "ymax": 0.98,
+            "xmax": 0.98
+          }
+        },
+        "observed_items": [
+          {
+            "object_id": "obj-1",
+            "category": "product",
+            "label": "Folded T-Shirt",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": "M 100% COTTON",
+              "form": "folded garment"
+            },
+            "confidence": 0.98,
+            "bbox": {
+              "ymin": 0.19,
+              "xmin": 0.07,
+              "ymax": 0.45,
+              "xmax": 0.3
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-2",
+            "category": "product",
+            "label": "Folded T-Shirt",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": "M 100% COTTON",
+              "form": "folded garment"
+            },
+            "confidence": 0.98,
+            "bbox": {
+              "ymin": 0.19,
+              "xmin": 0.33,
+              "ymax": 0.45,
+              "xmax": 0.57
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-3",
+            "category": "product",
+            "label": "Blue Cap",
+            "visual_attributes": {
+              "color": "blue",
+              "visible_text": "BLUE CAP",
+              "form": "baseball cap"
+            },
+            "confidence": 0.98,
+            "bbox": {
+              "ymin": 0.24,
+              "xmin": 0.62,
+              "ymax": 0.54,
+              "xmax": 0.85
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          }
+        ],
+        "ambiguity_flags": []
+      },
+      "total_products": 3
+    },
+    {
+      "test": "REAL GEMINI TEST 2",
+      "desc": "Wrong-Item Package Image (Red Cap instead of Blue Cap)",
+      "image_path": "fixtures/scenarios/example_2_wrong_item/box_photo.png",
+      "observation": {
+        "image_id": "box_photo",
+        "image_quality": "clear",
+        "clarity_score": 1.0,
+        "container": {
+          "container_type": "cardboard_box",
+          "visible_damage": false,
+          "damage_notes": "None",
+          "bbox": {
+            "ymin": 0.02,
+            "xmin": 0.02,
+            "ymax": 0.98,
+            "xmax": 0.98
+          }
+        },
+        "observed_items": [
+          {
+            "object_id": "obj-1",
+            "category": "product",
+            "label": "Folded T-Shirt",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": "M 100% COTTON",
+              "form": "folded garment"
+            },
+            "confidence": 0.98,
+            "bbox": {
+              "ymin": 0.2,
+              "xmin": 0.07,
+              "ymax": 0.45,
+              "xmax": 0.3
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-2",
+            "category": "product",
+            "label": "Folded T-Shirt",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": "M 100% COTTON",
+              "form": "folded garment"
+            },
+            "confidence": 0.98,
+            "bbox": {
+              "ymin": 0.2,
+              "xmin": 0.33,
+              "ymax": 0.45,
+              "xmax": 0.57
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-3",
+            "category": "product",
+            "label": "Cap",
+            "visual_attributes": {
+              "color": "red",
+              "visible_text": "REDCAP",
+              "form": "cap"
+            },
+            "confidence": 0.95,
+            "bbox": {
+              "ymin": 0.24,
+              "xmin": 0.62,
+              "ymax": 0.54,
+              "xmax": 0.85
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Fully visible"
+            },
+            "ambiguity_notes": null,
+            "image_id": "box_photo"
+          }
+        ],
+        "ambiguity_flags": []
+      },
+      "total_products": 3
+    },
+    {
+      "test": "REAL GEMINI TEST 3",
+      "desc": "Blurry / Ambiguous Package Image",
+      "image_path": "fixtures/scenarios/example_5_unclear_photo/box_photo.png",
+      "observation": {
+        "image_id": "box_photo",
+        "image_quality": "blurry",
+        "clarity_score": 0.3,
+        "container": {
+          "container_type": "cardboard_box",
+          "visible_damage": false,
+          "damage_notes": "None",
+          "bbox": {
+            "ymin": 0.0,
+            "xmin": 0.0,
+            "ymax": 1.0,
+            "xmax": 1.0
+          }
+        },
+        "observed_items": [
+          {
+            "object_id": "obj-1",
+            "category": "product",
+            "label": "Unknown Item",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": null,
+              "form": "rectangular object"
+            },
+            "confidence": 0.6,
+            "bbox": {
+              "ymin": 0.165,
+              "xmin": 0.058,
+              "ymax": 0.461,
+              "xmax": 0.298
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Blurry appearance"
+            },
+            "ambiguity_notes": "Image is extremely blurry, exact item details cannot be determined.",
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-2",
+            "category": "product",
+            "label": "Unknown Item",
+            "visual_attributes": {
+              "color": "black",
+              "visible_text": null,
+              "form": "rectangular object"
+            },
+            "confidence": 0.6,
+            "bbox": {
+              "ymin": 0.169,
+              "xmin": 0.341,
+              "ymax": 0.458,
+              "xmax": 0.579
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Blurry appearance"
+            },
+            "ambiguity_notes": "Image is extremely blurry, exact item details cannot be determined.",
+            "image_id": "box_photo"
+          },
+          {
+            "object_id": "obj-3",
+            "category": "product",
+            "label": "Unknown Item",
+            "visual_attributes": {
+              "color": "blue",
+              "visible_text": null,
+              "form": "rounded object"
+            },
+            "confidence": 0.6,
+            "bbox": {
+              "ymin": 0.218,
+              "xmin": 0.621,
+              "ymax": 0.559,
+              "xmax": 0.855
+            },
+            "occlusion": {
+              "is_occluded": false,
+              "occlusion_ratio": 0.0,
+              "notes": "Blurry appearance"
+            },
+            "ambiguity_notes": "Image is extremely blurry, exact item details cannot be determined.",
+            "image_id": "box_photo"
+          }
+        ],
+        "ambiguity_flags": [
+          "High blur level across the entire image making product identification unreliable."
+        ]
+      },
+      "total_products": 3
+    }
+  ]
+}

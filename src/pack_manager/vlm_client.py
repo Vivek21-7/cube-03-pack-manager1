@@ -7,12 +7,13 @@ import io
 import json
 import logging
 import os
+from pathlib import Path
 from typing import Any, Protocol
 
 import httpx
 from PIL import Image, ImageFilter, ImageStat
 
-from pack_manager.prompts import PACK_MANAGER_SYSTEM_PROMPT
+from pack_manager.prompts import PACK_MANAGER_SYSTEM_PROMPT, PACK_OBSERVATION_SYSTEM_PROMPT
 
 logger = logging.getLogger("pack_manager.vlm")
 
@@ -24,6 +25,9 @@ class VLMClient(Protocol):
     def inspect(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
         """Send prompt and image to the vision language model and return raw JSON response text."""
 
+    def observe(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
+        """Stage 1: Send observation prompt and image (blind to order) and return visual observations JSON."""
+
 
 class GeminiVLMClient:
     """Google Gemini Multimodal Vision API Client via Generative Language REST."""
@@ -31,15 +35,31 @@ class GeminiVLMClient:
     def __init__(
         self,
         api_key: str | None = None,
-        model_name: str = "gemini-2.0-flash",
-        timeout: float = 30.0,
+        model_name: str = "gemini-3.5-flash-lite",
+        timeout: float = 60.0,
     ) -> None:
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if not self.api_key:
+        key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not key:
+            candidates = [
+                Path(".env"),
+                Path(".env.local")
+            ]
+            for c in candidates:
+                if c.is_file():
+                    for line in c.read_text(encoding="utf-8").splitlines():
+                        if line.strip().startswith("GEMINI_API_KEY="):
+                            key = line.strip().split("=", 1)[1].strip().strip('"').strip("'")
+                            break
+                if key:
+                    break
+        if not key:
             raise ValueError(
                 "Gemini API key is required. Set GEMINI_API_KEY or pass api_key to constructor."
             )
-        self.model_name = model_name
+        self.api_key = key
+        self.model_name = model_name or "gemini-3.5-flash-lite"
+        if self.model_name in ("gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.5-flash"):
+            self.model_name = "gemini-flash-latest"
         self.provider_name = "gemini"
         self.timeout = timeout
         self.endpoint = (
@@ -87,6 +107,47 @@ class GeminiVLMClient:
         except (KeyError, IndexError) as exc:
             raise RuntimeError(f"Unexpected response structure from Gemini: {data}") from exc
 
+    def observe(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
+        b64_img = base64.b64encode(image_bytes).decode("ascii")
+        payload = {
+            "system_instruction": {"parts": [{"text": PACK_OBSERVATION_SYSTEM_PROMPT}]},
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [
+                        {"text": prompt},
+                        {
+                            "inline_data": {
+                                "mime_type": mime_type,
+                                "data": b64_img,
+                            }
+                        },
+                    ],
+                }
+            ],
+            "generationConfig": {
+                "response_mime_type": "application/json",
+                "temperature": 0.1,
+            },
+        }
+
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(
+                self.endpoint,
+                headers={"Content-Type": "application/json"},
+                params={"key": self.api_key},
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        try:
+            candidates = data.get("candidates", [])
+            parts = candidates[0]["content"]["parts"]
+            return parts[0]["text"]
+        except (KeyError, IndexError) as exc:
+            raise RuntimeError(f"Unexpected response structure from Gemini: {data}") from exc
+
 
 class OpenAIVLMClient:
     """OpenAI Vision Client (GPT-4o, GPT-4o-mini) via Chat Completions REST."""
@@ -96,7 +157,7 @@ class OpenAIVLMClient:
         api_key: str | None = None,
         model_name: str = "gpt-4o",
         base_url: str = "https://api.openai.com/v1",
-        timeout: float = 30.0,
+        timeout: float = 60.0,
     ) -> None:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
@@ -145,6 +206,43 @@ class OpenAIVLMClient:
         except (KeyError, IndexError) as exc:
             raise RuntimeError(f"Unexpected response structure from OpenAI: {data}") from exc
 
+    def observe(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
+        b64_img = base64.b64encode(image_bytes).decode("ascii")
+        data_url = f"data:{mime_type};base64,{b64_img}"
+
+        payload = {
+            "model": self.model_name,
+            "messages": [
+                {"role": "system", "content": PACK_OBSERVATION_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": data_url, "detail": "high"}},
+                    ],
+                },
+            ],
+            "response_format": {"type": "json_object"},
+            "temperature": 0.1,
+        }
+
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        try:
+            return data["choices"][0]["message"]["content"]
+        except (KeyError, IndexError) as exc:
+            raise RuntimeError(f"Unexpected response structure from OpenAI: {data}") from exc
+
 
 class AnthropicVLMClient:
     """Anthropic Claude Vision Client (Claude 3.5 Sonnet) via Messages REST."""
@@ -153,7 +251,7 @@ class AnthropicVLMClient:
         self,
         api_key: str | None = None,
         model_name: str = "claude-3-5-sonnet-20241022",
-        timeout: float = 30.0,
+        timeout: float = 60.0,
     ) -> None:
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
@@ -208,6 +306,50 @@ class AnthropicVLMClient:
         except (KeyError, IndexError) as exc:
             raise RuntimeError(f"Unexpected response structure from Anthropic: {data}") from exc
 
+    def observe(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
+        b64_img = base64.b64encode(image_bytes).decode("ascii")
+
+        payload = {
+            "model": self.model_name,
+            "max_tokens": 4096,
+            "system": PACK_OBSERVATION_SYSTEM_PROMPT,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": mime_type,
+                                "data": b64_img,
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+            "temperature": 0.1,
+        }
+
+        with httpx.Client(timeout=self.timeout) as client:
+            resp = client.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": self.api_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        try:
+            return data["content"][0]["text"]
+        except (KeyError, IndexError) as exc:
+            raise RuntimeError(f"Unexpected response structure from Anthropic: {data}") from exc
+
 
 class SimulationVLMClient:
     """Offline Simulation VLM Client.
@@ -220,6 +362,229 @@ class SimulationVLMClient:
     def __init__(self, model_name: str = "simulation-vlm-1.0") -> None:
         self.provider_name = "simulation"
         self.model_name = model_name
+
+    def observe(self, prompt: str, image_bytes: bytes, mime_type: str = "image/png") -> str:
+        """Stage 1: Pure visual observation of package photograph (blind to expected order)."""
+        pil_img = Image.open(io.BytesIO(image_bytes))
+        scenario_tag = pil_img.info.get("scenario")
+        has_damage = pil_img.info.get("damage") == "true" or scenario_tag == "damaged_product"
+
+        # Check sharpness
+        gray = pil_img.convert("L").filter(ImageFilter.FIND_EDGES)
+        stddev = float(ImageStat.Stat(gray).stddev[0])
+        is_blurry = stddev < 5.0 or scenario_tag == "unclear_photo"
+
+        container = {
+            "container_type": "cardboard_box",
+            "visible_damage": bool(has_damage),
+            "damage_notes": "Punctured and crushed carton flap" if has_damage else None,
+            "bbox": {"ymin": 0.025, "xmin": 0.018, "ymax": 0.975, "xmax": 0.982}
+        }
+
+        if is_blurry:
+            return json.dumps({
+                "image_id": "box-photo-0",
+                "image_quality": "blurry",
+                "clarity_score": 0.2,
+                "container": container,
+                "observed_items": [],
+                "ambiguity_flags": [
+                    "Image sharpness is below inspection threshold (severe blur)",
+                    "Physical item contours and labels cannot be distinguished"
+                ]
+            })
+
+        observed_items = []
+        ambiguity_flags = []
+
+        if scenario_tag == "wrong_item":
+            observed_items = [
+                {
+                    "object_id": "obj-1",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.071, "ymax": 0.450, "xmax": 0.304},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-2",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.339, "ymax": 0.450, "xmax": 0.571},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-3",
+                    "category": "product",
+                    "label": "Baseball Cap",
+                    "visual_attributes": {"color": "red", "variant": "red", "text": "RED CAP"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.250, "xmin": 0.625, "ymax": 0.538, "xmax": 0.857},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                }
+            ]
+        elif scenario_tag == "extra_item":
+            observed_items = [
+                {
+                    "object_id": "obj-1",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.054, "ymax": 0.450, "xmax": 0.286},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-2",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.304, "ymax": 0.450, "xmax": 0.536},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-3",
+                    "category": "product",
+                    "label": "Baseball Cap",
+                    "visual_attributes": {"color": "blue", "variant": "blue", "text": "BLUE CAP"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.175, "xmin": 0.571, "ymax": 0.463, "xmax": 0.804},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-4",
+                    "category": "product",
+                    "label": "Scarf with Fringe",
+                    "visual_attributes": {"color": "red", "variant": "red", "text": "RED SCARF"},
+                    "confidence": 0.95,
+                    "bbox": {"ymin": 0.500, "xmin": 0.571, "ymax": 0.713, "xmax": 0.786},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                }
+            ]
+        elif scenario_tag in ("correct_order", "missing_item", "damaged_product"):
+            observed_items = [
+                {
+                    "object_id": "obj-1",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.071, "ymax": 0.450, "xmax": 0.304},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-2",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black", "text": "M • 100% COTTON"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.200, "xmin": 0.339, "ymax": 0.450, "xmax": 0.571},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                },
+                {
+                    "object_id": "obj-3",
+                    "category": "product",
+                    "label": "Baseball Cap",
+                    "visual_attributes": {"color": "blue", "variant": "blue", "text": "BLUE CAP"},
+                    "confidence": 0.98,
+                    "bbox": {"ymin": 0.250, "xmin": 0.625, "ymax": 0.538, "xmax": 0.857},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                }
+            ]
+        else:
+            import numpy as np
+            rgb_img = pil_img.convert("RGB")
+            arr = np.array(rgb_img, dtype=np.float32)
+            r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
+            gray = 0.299 * r + 0.587 * g + 0.114 * b
+            blue_ratio = float(np.mean((b > r + 30) & (b > g + 15) & (b > 60)) * 100)
+            red_ratio = float(np.mean((r > g + 35) & (r > b + 35) & (r > 60)) * 100)
+            dark_ratio = float(np.mean(gray < 55) * 100)
+
+            obj_idx = 1
+            if blue_ratio >= 2.5:
+                observed_items.append({
+                    "object_id": f"obj-{obj_idx}",
+                    "category": "product",
+                    "label": "Blue Cap",
+                    "visual_attributes": {"color": "blue", "variant": "blue"},
+                    "confidence": 0.92,
+                    "bbox": {"ymin": 0.250, "xmin": 0.625, "ymax": 0.538, "xmax": 0.857},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                })
+                obj_idx += 1
+            if red_ratio >= 2.5:
+                observed_items.append({
+                    "object_id": f"obj-{obj_idx}",
+                    "category": "product",
+                    "label": "Red Cap",
+                    "visual_attributes": {"color": "red", "variant": "red"},
+                    "confidence": 0.92,
+                    "bbox": {"ymin": 0.250, "xmin": 0.625, "ymax": 0.538, "xmax": 0.857},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                })
+                obj_idx += 1
+            if dark_ratio >= 15.0:
+                observed_items.append({
+                    "object_id": f"obj-{obj_idx}",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black"},
+                    "confidence": 0.94,
+                    "bbox": {"ymin": 0.200, "xmin": 0.071, "ymax": 0.450, "xmax": 0.304},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                })
+                obj_idx += 1
+                observed_items.append({
+                    "object_id": f"obj-{obj_idx}",
+                    "category": "product",
+                    "label": "Folded T-Shirt",
+                    "visual_attributes": {"color": "black", "variant": "black"},
+                    "confidence": 0.94,
+                    "bbox": {"ymin": 0.200, "xmin": 0.339, "ymax": 0.450, "xmax": 0.571},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                })
+                obj_idx += 1
+
+            if not observed_items:
+                observed_items.append({
+                    "object_id": "obj-1",
+                    "category": "product",
+                    "label": "Product Item",
+                    "visual_attributes": {"form": "discrete packaged object"},
+                    "confidence": 0.80,
+                    "bbox": {"ymin": 0.200, "xmin": 0.200, "ymax": 0.700, "xmax": 0.700},
+                    "occlusion": {"is_occluded": False, "occlusion_ratio": 0.0},
+                    "image_id": "box-photo-0"
+                })
+
+        return json.dumps({
+            "image_id": "box-photo-0",
+            "image_quality": "clear",
+            "clarity_score": 0.98,
+            "container": container,
+            "observed_items": observed_items,
+            "ambiguity_flags": ambiguity_flags
+        })
 
     def _inspect_real_captured_image(
         self,

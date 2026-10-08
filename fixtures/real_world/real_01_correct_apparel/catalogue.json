@@ -1,0 +1,21 @@
+[
+  {
+    "sku": "TSHIRT-BLK-M",
+    "product_name": "Black T-Shirt",
+    "category": "apparel",
+    "attributes": {
+      "color": "black",
+      "size": "M"
+    },
+    "reference_images": []
+  },
+  {
+    "sku": "CAP-BLU-001",
+    "product_name": "Blue Cap",
+    "category": "apparel",
+    "attributes": {
+      "color": "blue"
+    },
+    "reference_images": []
+  }
+]

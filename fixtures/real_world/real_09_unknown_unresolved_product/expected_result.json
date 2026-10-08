@@ -1,0 +1,5 @@
+{
+  "expected_decision": "UNCERTAIN",
+  "scenario_type": "unknown_unresolved_product",
+  "notes": "Package contains an uncatalogued electronic device. Unresolved product in carton blocks confident verification."
+}

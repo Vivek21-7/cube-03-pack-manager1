@@ -1,0 +1,10 @@
+{
+  "order_id": "REAL-011",
+  "lines": [
+    {
+      "sku": "CAM-ACT-001",
+      "product_name": "Action Camera 4K",
+      "expected_qty": 1
+    }
+  ]
+}

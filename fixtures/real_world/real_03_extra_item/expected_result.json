@@ -1,0 +1,5 @@
+{
+  "expected_decision": "STOP_FIX",
+  "scenario_type": "extra_item",
+  "notes": "Red scarf SCARF-RED-001 is present in package but not on order manifest."
+}

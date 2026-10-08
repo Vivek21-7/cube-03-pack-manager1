@@ -1,0 +1,15 @@
+{
+  "order_id": "REAL-005",
+  "lines": [
+    {
+      "sku": "TSHIRT-BLK-M",
+      "product_name": "Black T-Shirt",
+      "expected_qty": 3
+    },
+    {
+      "sku": "CAP-BLU-001",
+      "product_name": "Blue Cap",
+      "expected_qty": 1
+    }
+  ]
+}

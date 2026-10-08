@@ -1,0 +1,29 @@
+[
+  {
+    "sku": "TSHIRT-BLK-M",
+    "product_name": "Black T-Shirt",
+    "category": "apparel",
+    "attributes": {
+      "color": "black"
+    },
+    "reference_images": []
+  },
+  {
+    "sku": "CAP-BLU-001",
+    "product_name": "Blue Cap",
+    "category": "apparel",
+    "attributes": {
+      "color": "blue"
+    },
+    "reference_images": []
+  },
+  {
+    "sku": "DOC-MANUAL-01",
+    "product_name": "User Manual",
+    "category": "documentation",
+    "attributes": {
+      "language": "en"
+    },
+    "reference_images": []
+  }
+]

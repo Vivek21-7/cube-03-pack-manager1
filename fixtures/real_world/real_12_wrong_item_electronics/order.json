@@ -1,0 +1,10 @@
+{
+  "order_id": "REAL-012",
+  "lines": [
+    {
+      "sku": "HEADPHONES-BT-01",
+      "product_name": "Wireless Headphones",
+      "expected_qty": 1
+    }
+  ]
+}

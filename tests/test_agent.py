@@ -158,3 +158,117 @@ def test_agent_vision_backend_pipeline_adapter() -> None:
     assert result.evidence.agent == "pack-manager"
     assert result.comparison.decision == Decision.SEAL
     assert result.evidence.content_hash.startswith("sha256:")
+
+
+# ==============================================================================
+# STAGE 1: VISUAL OBSERVATION UNIT & INTEGRATION TESTS
+# ==============================================================================
+
+def test_stage_1_observation_schema_validation() -> None:
+    from pack_manager.agent_schemas import (
+        BoundingBox2D,
+        ContainerObservation,
+        ObservedPhysicalItem,
+        PackageVisualObservation,
+    )
+
+    box = BoundingBox2D(ymin=0.1, xmin=0.2, ymax=0.5, xmax=0.6)
+    assert box.ymin == 0.1 and box.xmax == 0.6
+
+    # Strict rejection of inverted bounding boxes without guessing width or swapping
+    with pytest.raises(ValueError):
+        BoundingBox2D(ymin=0.8, xmin=0.2, ymax=0.3, xmax=0.6)  # ymin > ymax
+
+    with pytest.raises(ValueError):
+        BoundingBox2D(ymin=0.1, xmin=0.8, ymax=0.5, xmax=0.2)  # xmin > xmax
+
+    item = ObservedPhysicalItem(
+        object_id="obj-1",
+        label="Folded T-Shirt",
+        visual_attributes={"color": "black", "text": "M"},
+        confidence=0.95,
+        bbox=box,
+    )
+    obs = PackageVisualObservation(
+        image_id="test-img-1",
+        container=ContainerObservation(container_type="cardboard_box", visible_damage=False),
+        observed_items=[item],
+    )
+    assert obs.total_observed_products() == 1
+    assert obs.container.visible_damage is False
+
+
+def test_stage_1_observation_correct_order_blind_to_order(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_1_correct_order"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    # Observe package without passing any order manifest
+    obs = agent.observe_package(photo=scen["photo"], image_id="box-test-1")
+
+    assert obs.image_quality == "clear"
+    assert obs.clarity_score > 0.9
+    assert obs.container.visible_damage is False
+
+    # Must return 1 detection per physical product unit (2 shirts + 1 cap = 3 items)
+    assert len(obs.observed_items) == 3
+    assert obs.total_observed_products() == 3
+
+    # Every item must have valid normalized bounding box and confidence
+    for item in obs.observed_items:
+        assert 0.0 <= item.bbox.ymin <= item.bbox.ymax <= 1.0
+        assert 0.0 <= item.bbox.xmin <= item.bbox.xmax <= 1.0
+        assert 0.8 <= item.confidence <= 1.0
+        assert item.occlusion.is_occluded is False
+
+
+def test_stage_1_observation_wrong_item_observes_red_variant(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_2_wrong_item"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    obs = agent.observe_package(photo=scen["photo"])
+    assert len(obs.observed_items) == 3
+
+    cap = next(it for it in obs.observed_items if "cap" in it.label.lower())
+    assert cap.visual_attributes.get("color") == "red"
+    assert "RED CAP" in cap.visual_attributes.get("text", "")
+
+
+def test_stage_1_observation_missing_item_only_reports_visible(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_3_missing_item"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    # In missing_item scenario, the manual is physically absent from the box photo.
+    # Stage 1 must NOT claim anything is missing because it does not know the order!
+    obs = agent.observe_package(photo=scen["photo"])
+    assert len(obs.observed_items) == 3  # Only the 2 shirts and 1 cap are physically seen
+    assert all("manual" not in it.label.lower() for it in obs.observed_items)
+
+
+def test_stage_1_observation_extra_item_detects_all_physical_units(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_4_extra_item"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    obs = agent.observe_package(photo=scen["photo"])
+    # 2 shirts + 1 cap + 1 scarf = 4 physical items detected
+    assert len(obs.observed_items) == 4
+    labels = [it.label.lower() for it in obs.observed_items]
+    assert any("scarf" in l for l in labels)
+
+
+def test_stage_1_observation_unclear_photo_flags_blur_ambiguity(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_5_unclear_photo"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    obs = agent.observe_package(photo=scen["photo"])
+    assert obs.image_quality == "blurry"
+    assert obs.clarity_score < 0.5
+    assert len(obs.ambiguity_flags) > 0
+
+
+def test_stage_1_observation_detects_container_damage(scenarios: dict[str, dict[str, Path]]) -> None:
+    scen = scenarios["example_6_damaged_goods"]
+    agent = PackManagerAIAgent(vlm_client=SimulationVLMClient())
+
+    obs = agent.observe_package(photo=scen["photo"])
+    assert obs.container.visible_damage is True
+    assert obs.container.damage_notes is not None

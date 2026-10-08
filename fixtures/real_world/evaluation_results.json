@@ -1,0 +1,1966 @@
+[
+  {
+    "scenario_id": "real_01_correct_apparel",
+    "image": "real_01_correct_apparel/box_photo.png",
+    "expected_decision": "SEAL",
+    "actual_decision": "SEAL",
+    "correct": true,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": "TSHIRT-BLK-M",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 0.85,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.85,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'",
+                "Attribute match: size=M"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'",
+            "Attribute match: size=M"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.07,
+            "ymax": 0.45,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": "TSHIRT-BLK-M",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 0.85,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.85,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'",
+                "Attribute match: size=M"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'",
+            "Attribute match: size=M"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.33,
+            "ymax": 0.45,
+            "xmax": 0.57,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.24,
+            "xmin": 0.62,
+            "ymax": 0.53,
+            "xmax": 0.85,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_qty": 2,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "notes": "All 2 unit(s) verified"
+        },
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": []
+    },
+    "stage4": {
+      "decision": "SEAL",
+      "confidence": "high",
+      "reason": "All 3 expected product unit(s) verified across 2 SKU(s) with high visual confidence. Packaging contents match order manifest exactly. APPROVED TO SEAL."
+    },
+    "failure_type": null,
+    "notes": "Two black shirts and one blue cap ordered and present. High visual clarity."
+  },
+  {
+    "scenario_id": "real_02_missing_item",
+    "image": "real_02_missing_item/box_photo.png",
+    "expected_decision": "STOP_FIX",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.247,
+            "xmin": 0.625,
+            "ymax": 0.538,
+            "xmax": 0.824,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.198,
+            "xmin": 0.071,
+            "ymax": 0.453,
+            "xmax": 0.305,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.198,
+            "xmin": 0.339,
+            "ymax": 0.453,
+            "xmax": 0.574,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [
+        {
+          "sku": "DOC-MANUAL-01",
+          "product_name": "User Manual",
+          "expected_qty": 1,
+          "observed_qty": 0,
+          "delta": -1,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 1 unit(s), 0 observed"
+        }
+      ],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (2 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.; Confirmed missing: DOC-MANUAL-01. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "User manual DOC-MANUAL-01 ordered but not visible in carton."
+  },
+  {
+    "scenario_id": "real_03_extra_item",
+    "image": "real_03_extra_item/box_photo.png",
+    "expected_decision": "STOP_FIX",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 4,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap",
+        "Red Scarf"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.17,
+            "xmin": 0.57,
+            "ymax": 0.46,
+            "xmax": 0.8,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-4",
+          "resolved_sku": "SCARF-RED-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "SCARF-RED-001",
+              "score": 1.0,
+              "product_name": "Red Scarf",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: red",
+                "Product title token overlap (2): 'scarf red'",
+                "Observed color 'red' matches catalogue color 'red'",
+                "Observed printed markings match multiple title words: 'scarf red'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: red",
+            "Product title token overlap (2): 'scarf red'",
+            "Observed color 'red' matches catalogue color 'red'",
+            "Observed printed markings match multiple title words: 'scarf red'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.5,
+            "xmin": 0.57,
+            "ymax": 0.72,
+            "xmax": 0.79,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.05,
+            "ymax": 0.45,
+            "xmax": 0.29,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.3,
+            "ymax": 0.45,
+            "xmax": 0.54,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [
+        {
+          "sku": "SCARF-RED-001",
+          "product_name": "Red Scarf",
+          "expected_qty": 0,
+          "observed_qty": 1,
+          "delta": 1,
+          "status": "EXTRA",
+          "object_ids": [
+            "obj-4"
+          ],
+          "notes": "Extra item: Observed 1 unit(s) of unexpected SKU SCARF-RED-001"
+        }
+      ],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (2 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.; Confirmed extra: SCARF-RED-001. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Red scarf SCARF-RED-001 is present in package but not on order manifest."
+  },
+  {
+    "scenario_id": "real_04_wrong_item",
+    "image": "real_04_wrong_item/box_photo.png",
+    "expected_decision": "STOP_FIX",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Red Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-RED-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-RED-001",
+              "score": 1.0,
+              "product_name": "Red Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: red",
+                "Product title token overlap (2): 'cap red'",
+                "Observed color 'red' matches catalogue color 'red'",
+                "Observed printed markings match multiple title words: 'cap red'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: red",
+            "Product title token overlap (2): 'cap red'",
+            "Observed color 'red' matches catalogue color 'red'",
+            "Observed printed markings match multiple title words: 'cap red'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.24,
+            "xmin": 0.624,
+            "ymax": 0.54,
+            "xmax": 0.856,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.198,
+            "xmin": 0.07,
+            "ymax": 0.452,
+            "xmax": 0.306,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.198,
+            "xmin": 0.338,
+            "ymax": 0.452,
+            "xmax": 0.574,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [],
+      "missing": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 0,
+          "delta": -1,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 1 unit(s), 0 observed"
+        }
+      ],
+      "extra": [
+        {
+          "sku": "CAP-RED-001",
+          "product_name": "Red Cap",
+          "expected_qty": 0,
+          "observed_qty": 1,
+          "delta": 1,
+          "status": "EXTRA",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "Extra item: Observed 1 unit(s) of unexpected SKU CAP-RED-001"
+        }
+      ],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (3 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.; Confirmed missing: CAP-BLU-001; Confirmed extra: CAP-RED-001. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Customer ordered Blue Cap, but carton contains Red Cap. Product substitution."
+  },
+  {
+    "scenario_id": "real_05_wrong_quantity",
+    "image": "real_05_wrong_quantity/box_photo.png",
+    "expected_decision": "STOP_FIX",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.24,
+            "xmin": 0.62,
+            "ymax": 0.53,
+            "xmax": 0.85,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.07,
+            "ymax": 0.45,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.33,
+            "ymax": 0.45,
+            "xmax": 0.57,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 3,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 3 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (1 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Order expects 3 black t-shirts, but carton only contains 2 units (under-pack)."
+  },
+  {
+    "scenario_id": "real_06_multiple_identical_products",
+    "image": "real_06_multiple_identical_products/box_photo.png",
+    "expected_decision": "SEAL",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.24,
+            "xmin": 0.62,
+            "ymax": 0.53,
+            "xmax": 0.85,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.07,
+            "ymax": 0.45,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.33,
+            "ymax": 0.45,
+            "xmax": 0.57,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (1 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Multiple discrete instances of TSHIRT-BLK-M (obj-1 and obj-2) aggregate correctly to quantity 2."
+  },
+  {
+    "scenario_id": "real_07_visually_similar_products",
+    "image": "real_07_visually_similar_products/box_photo.png",
+    "expected_decision": "SEAL",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            },
+            {
+              "sku": "CAP-NVY-001",
+              "score": 0.85,
+              "product_name": "Navy Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Product title token overlap (2): 'cap blue'",
+                "Near color match: observed 'blue' vs catalogue 'navy'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.24,
+            "xmin": 0.62,
+            "ymax": 0.53,
+            "xmax": 0.85,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.07,
+            "ymax": 0.45,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.33,
+            "ymax": 0.45,
+            "xmax": 0.57,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (1 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Catalogue includes closely related Navy Cap. Clear visual text BLUE CAP and bright blue hue correctly resolves to CAP-BLU-001."
+  },
+  {
+    "scenario_id": "real_08_ambiguous_blurry_image",
+    "image": "real_08_ambiguous_blurry_image/box_photo.png",
+    "expected_decision": "UNCERTAIN",
+    "actual_decision": "UNCERTAIN",
+    "correct": true,
+    "stage1": {
+      "image_quality": "blurry",
+      "clarity_score": 0.4,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "unidentified object",
+        "unidentified object",
+        "unidentified object"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [],
+      "ambiguous": [],
+      "unresolved": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "UNRESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": "UNKNOWN_PRODUCT",
+          "confidence": 0.0,
+          "candidate_skus": [],
+          "matching_evidence": [
+            "No compatible catalogue SKU found matching observed attributes"
+          ],
+          "ambiguity_reason": "Observed item 'unidentified object' does not match any known SKU in the catalogue",
+          "bbox": {
+            "ymin": 0.16,
+            "xmin": 0.06,
+            "ymax": 0.46,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "UNRESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": "UNKNOWN_PRODUCT",
+          "confidence": 0.0,
+          "candidate_skus": [],
+          "matching_evidence": [
+            "No compatible catalogue SKU found matching observed attributes"
+          ],
+          "ambiguity_reason": "Observed item 'unidentified object' does not match any known SKU in the catalogue",
+          "bbox": {
+            "ymin": 0.16,
+            "xmin": 0.34,
+            "ymax": 0.46,
+            "xmax": 0.58,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-3",
+          "resolved_sku": null,
+          "status": "UNRESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": "UNKNOWN_PRODUCT",
+          "confidence": 0.0,
+          "candidate_skus": [],
+          "matching_evidence": [
+            "No compatible catalogue SKU found matching observed attributes"
+          ],
+          "ambiguity_reason": "Observed item 'unidentified object' does not match any known SKU in the catalogue",
+          "bbox": {
+            "ymin": 0.21,
+            "xmin": 0.62,
+            "ymax": 0.55,
+            "xmax": 0.86,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ]
+    },
+    "stage3": {
+      "matched": [],
+      "missing": [
+        {
+          "sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_qty": 0,
+          "delta": -2,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 2 unit(s), 0 observed"
+        },
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 0,
+          "delta": -1,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 1 unit(s), 0 observed"
+        }
+      ],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": []
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "low",
+      "reason": "Package photograph quality is blurry (clarity score: 0.40). Visual evidence is insufficient to verify carton contents with certainty. Please capture a clearer, well-lit photograph of the open carton."
+    },
+    "failure_type": null,
+    "notes": "Heavy blur prohibits confident identification of package contents. System must output UNCERTAIN."
+  },
+  {
+    "scenario_id": "real_09_unknown_unresolved_product",
+    "image": "real_09_unknown_unresolved_product/box_photo.png",
+    "expected_decision": "UNCERTAIN",
+    "actual_decision": "UNCERTAIN",
+    "correct": true,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 1,
+      "observed_labels": [
+        "Action Cam Box"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [],
+      "ambiguous": [],
+      "unresolved": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "UNRESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": "UNKNOWN_PRODUCT",
+          "confidence": 0.0,
+          "candidate_skus": [],
+          "matching_evidence": [
+            "No compatible catalogue SKU found matching observed attributes"
+          ],
+          "ambiguity_reason": "Observed item 'Action Cam Box' does not match any known SKU in the catalogue",
+          "bbox": {
+            "ymin": 0.27,
+            "xmin": 0.3,
+            "ymax": 0.73,
+            "xmax": 0.7,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ]
+    },
+    "stage3": {
+      "matched": [],
+      "missing": [
+        {
+          "sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 1,
+          "observed_qty": 0,
+          "delta": -1,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 1 unit(s), 0 observed"
+        }
+      ],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": []
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (2 issue(s)): Uncatalogued visible product 'obj-1' in package cannot be resolved to any known catalogue SKU. Prevents confident carton verification.; Confirmed missing: TSHIRT-BLK-M. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": null,
+    "notes": "Package contains an uncatalogued electronic device. Unresolved product in carton blocks confident verification."
+  },
+  {
+    "scenario_id": "real_10_damaged_box_intact_contents",
+    "image": "real_10_damaged_box_intact_contents/box_photo.png",
+    "expected_decision": "SEAL",
+    "actual_decision": "UNCERTAIN",
+    "correct": false,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 3,
+      "observed_labels": [
+        "Folded T-Shirt",
+        "Folded T-Shirt",
+        "Blue Cap"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-3",
+          "resolved_sku": "CAP-BLU-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 1.0,
+          "candidate_skus": [
+            {
+              "sku": "CAP-BLU-001",
+              "score": 1.0,
+              "product_name": "Blue Cap",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: blue",
+                "Product title token overlap (2): 'cap blue'",
+                "Observed color 'blue' matches catalogue color 'blue'",
+                "Observed printed markings match multiple title words: 'cap blue'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: blue",
+            "Product title token overlap (2): 'cap blue'",
+            "Observed color 'blue' matches catalogue color 'blue'",
+            "Observed printed markings match multiple title words: 'cap blue'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.25,
+            "xmin": 0.62,
+            "ymax": 0.54,
+            "xmax": 0.85,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.07,
+            "ymax": 0.45,
+            "xmax": 0.3,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        },
+        {
+          "object_id": "obj-2",
+          "resolved_sku": null,
+          "status": "AMBIGUOUS",
+          "semantic_type": "product",
+          "unresolved_reason": "INSUFFICIENT_CONFIDENCE",
+          "confidence": 0.8,
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ],
+          "ambiguity_reason": "Top candidate match score (0.80) below definitive resolution threshold (0.85)",
+          "bbox": {
+            "ymin": 0.2,
+            "xmin": 0.34,
+            "ymax": 0.45,
+            "xmax": 0.57,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAP-BLU-001",
+          "product_name": "Blue Cap",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-3"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": [
+        {
+          "expected_sku": "TSHIRT-BLK-M",
+          "product_name": "Black T-Shirt",
+          "expected_qty": 2,
+          "observed_resolved_qty": 0,
+          "unverified_qty": 2,
+          "possible_object_ids": [
+            "obj-1",
+            "obj-2"
+          ],
+          "candidate_skus": [
+            {
+              "sku": "TSHIRT-BLK-M",
+              "score": 0.8,
+              "product_name": "Black T-Shirt",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 't-shirt'",
+                "Observed color 'black' matches catalogue color 'black'"
+              ]
+            }
+          ],
+          "reason": "Shortfall of 2 unit(s) for TSHIRT-BLK-M cannot be confirmed missing: ambiguous observation(s) ['obj-1', 'obj-2'] list TSHIRT-BLK-M as a plausible candidate.",
+          "evidence": [
+            "Color match: black",
+            "Product title keyword match: 't-shirt'",
+            "Observed color 'black' matches catalogue color 'black'"
+          ]
+        }
+      ]
+    },
+    "stage4": {
+      "decision": "UNCERTAIN",
+      "confidence": "medium",
+      "reason": "Verification uncertain (1 issue(s)): Expected SKU 'TSHIRT-BLK-M' shortfall of 2 unit(s) cannot be verified: ambiguous observation(s) ['obj-1', 'obj-2'] could match TSHIRT-BLK-M.. Operator inspection or clearer camera angle required."
+    },
+    "failure_type": "STAGE2_AMBIGUOUS",
+    "notes": "Carton flap is damaged/crushed, but contents match order manifest exactly. Scope rule: carton damage does not trigger STOP_FIX."
+  },
+  {
+    "scenario_id": "real_11_correct_electronics",
+    "image": "real_11_correct_electronics/box_photo.png",
+    "expected_decision": "SEAL",
+    "actual_decision": "SEAL",
+    "correct": true,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 1,
+      "observed_labels": [
+        "Action Cam Box"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": "CAM-ACT-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 0.9,
+          "candidate_skus": [
+            {
+              "sku": "CAM-ACT-001",
+              "score": 0.9,
+              "product_name": "Action Camera 4K",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 'action'",
+                "Observed color 'black' matches catalogue color 'black'",
+                "Attribute match: model=4K",
+                "Observed printed markings match product title: 'action'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 'action'",
+            "Observed color 'black' matches catalogue color 'black'",
+            "Attribute match: model=4K",
+            "Observed printed markings match product title: 'action'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.27,
+            "xmin": 0.3,
+            "ymax": 0.73,
+            "xmax": 0.7,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [
+        {
+          "sku": "CAM-ACT-001",
+          "product_name": "Action Camera 4K",
+          "expected_qty": 1,
+          "observed_qty": 1,
+          "delta": 0,
+          "status": "MATCHED",
+          "object_ids": [
+            "obj-1"
+          ],
+          "notes": "All 1 unit(s) verified"
+        }
+      ],
+      "missing": [],
+      "extra": [],
+      "quantity_mismatches": [],
+      "unverified": []
+    },
+    "stage4": {
+      "decision": "SEAL",
+      "confidence": "high",
+      "reason": "All 1 expected product unit(s) verified across 1 SKU(s) with high visual confidence. Packaging contents match order manifest exactly. APPROVED TO SEAL."
+    },
+    "failure_type": null,
+    "notes": "Action Camera 4K ordered and present in carton with matching retail branding."
+  },
+  {
+    "scenario_id": "real_12_wrong_item_electronics",
+    "image": "real_12_wrong_item_electronics/box_photo.png",
+    "expected_decision": "STOP_FIX",
+    "actual_decision": "STOP_FIX",
+    "correct": true,
+    "stage1": {
+      "image_quality": "clear",
+      "clarity_score": 1.0,
+      "observed_item_count": 1,
+      "observed_labels": [
+        "Action Cam Box"
+      ],
+      "container_damage": false
+    },
+    "stage2": {
+      "resolved": [
+        {
+          "object_id": "obj-1",
+          "resolved_sku": "CAM-ACT-001",
+          "status": "RESOLVED",
+          "semantic_type": "product",
+          "unresolved_reason": null,
+          "confidence": 0.85,
+          "candidate_skus": [
+            {
+              "sku": "CAM-ACT-001",
+              "score": 0.85,
+              "product_name": "Action Camera 4K",
+              "asin": null,
+              "compatibility_reasons": [
+                "Color match: black",
+                "Product title keyword match: 'action'",
+                "Observed color 'black' matches catalogue color 'black'",
+                "Observed printed markings match product title: 'action'"
+              ]
+            }
+          ],
+          "matching_evidence": [
+            "Color match: black",
+            "Product title keyword match: 'action'",
+            "Observed color 'black' matches catalogue color 'black'",
+            "Observed printed markings match product title: 'action'"
+          ],
+          "ambiguity_reason": null,
+          "bbox": {
+            "ymin": 0.27,
+            "xmin": 0.3,
+            "ymax": 0.73,
+            "xmax": 0.7,
+            "is_valid": true
+          },
+          "image_id": "box-photo-0"
+        }
+      ],
+      "ambiguous": [],
+      "unresolved": []
+    },
+    "stage3": {
+      "matched": [],
+      "missing": [
+        {
+          "sku": "HEADPHONES-BT-01",
+          "product_name": "Wireless Headphones",
+          "expected_qty": 1,
+          "observed_qty": 0,
+          "delta": -1,
+          "status": "MISSING",
+          "object_ids": [],
+          "notes": "Confirmed missing: Expected 1 unit(s), 0 observed"
+        }
+      ],
+      "extra": [
+        {
+          "sku": "CAM-ACT-001",
+          "product_name": "Action Camera 4K",
+          "expected_qty": 0,
+          "observed_qty": 1,
+          "delta": 1,
+          "status": "EXTRA",
+          "object_ids": [
+            "obj-1"
+          ],
+          "notes": "Extra item: Observed 1 unit(s) of unexpected SKU CAM-ACT-001"
+        }
+      ],
+      "quantity_mismatches": [],
+      "unverified": []
+    },
+    "stage4": {
+      "decision": "STOP_FIX",
+      "confidence": "high",
+      "reason": "CRITICAL DEFECT: Product substitution / wrong item detected. Missing ordered item: HEADPHONES-BT-01 (expected 1, observed 0); Unexpected extra item: CAM-ACT-001 (expected 0, observed 1). DO NOT SEAL."
+    },
+    "failure_type": null,
+    "notes": "Customer ordered Wireless Headphones, but carton contains Action Camera."
+  }
+]

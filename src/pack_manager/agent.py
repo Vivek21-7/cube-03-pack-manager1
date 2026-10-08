@@ -16,14 +16,22 @@ from typing import Any
 from PIL import Image
 
 from pack_manager.agent_schemas import (
+    DecisionResult,
+    PackVerificationReport,
+    ManifestReconciliation,
+    PackageSKUResolution,
+    Stage2Config,
+    PackageVisualObservation,
+    ObservedPhysicalItem,
+    BoundingBox2D,
     OrderItemInput,
     PackManagerAIResponse,
     MatchResultAI,
     MissingItemAI,
     ExtraItemAI,
 )
-from pack_manager.models import BoundingBox, DetectedItem, Order, PackEvent
-from pack_manager.prompts import build_user_prompt
+from pack_manager.models import CatalogItem, BoundingBox, DetectedItem, Order, PackEvent
+from pack_manager.prompts import build_user_prompt, build_observation_user_prompt
 from pack_manager.vlm_client import SimulationVLMClient, VLMClient, get_vlm_client
 
 logger = logging.getLogger("pack_manager.agent")
@@ -132,6 +140,234 @@ class PackManagerAIAgent:
 
     def __init__(self, vlm_client: VLMClient | None = None) -> None:
         self.vlm = vlm_client or get_vlm_client()
+
+    def observe_package(
+        self,
+        photo: Path | str | bytes | Image.Image,
+        image_id: str = "box-photo-0",
+        max_retries: int = 1,
+    ) -> PackageVisualObservation:
+        """STAGE 1: Perform visual observation on package photograph without order knowledge.
+        Strict safety: If output is malformed or bounding boxes are rejected, retries once
+        without guessing or fabricating spatial data.
+        """
+        image_bytes, mime_type = _load_image_bytes(photo)
+        prompt = build_observation_user_prompt(image_id)
+
+        last_error: Exception | None = None
+        raw_output = ""
+        for attempt in range(max_retries + 1):
+            raw_output = self.vlm.observe(prompt, image_bytes, mime_type=mime_type)
+            cleaned_json = _clean_json_markdown(raw_output)
+
+            try:
+                parsed = json.loads(cleaned_json)
+                return PackageVisualObservation.model_validate(parsed)
+            except Exception as exc:
+                last_error = exc
+                logger.warning("Stage 1 observation attempt %d failed: %s", attempt + 1, exc)
+                if attempt < max_retries:
+                    continue
+
+        logger.error("VLM observation failed after %d attempt(s):\n%s", max_retries + 1, raw_output)
+        raise ValueError(f"Failed to obtain valid visual observation: {last_error}") from last_error
+
+
+    def resolve_skus(
+        self,
+        observation: PackageVisualObservation,
+        catalogue: list[CatalogItem] | Path | str | dict[str, Any] | None = None,
+        *,
+        config: Optional[Stage2Config] = None,
+        package_image: Optional[Path | str | bytes | Image.Image] = None,
+        **kwargs: Any,
+    ) -> PackageSKUResolution:
+        """STAGE 2: Order-Blind SKU / Catalogue Resolution.
+
+        Determines which catalogue SKU each visible product in the Stage 1 observation
+        most likely corresponds to. Strictly order-blind: Does NOT receive customer order
+        or expected quantities.
+        """
+        # Guard: Strict rejection of order manifests
+        if "order" in kwargs or "order_lines" in kwargs or "expected" in kwargs:
+            raise TypeError("Stage 2 is strictly order-blind and must NOT receive order manifests or expected quantities.")
+
+        for arg in [observation, catalogue]:
+            arg_type = type(arg).__name__
+            if "Order" in arg_type or "OrderLine" in arg_type:
+                raise TypeError(f"Stage 2 cannot accept '{arg_type}'. Only PackageVisualObservation and catalogue are permitted.")
+
+        # Ingest catalogue
+        cat_items: list[CatalogItem] = []
+        if catalogue is None:
+            from pack_manager.catalogue_resolver import DEMO_FIXTURE_CATALOGUE
+            cat_items = DEMO_FIXTURE_CATALOGUE
+        elif isinstance(catalogue, list):
+            cat_items = [
+                CatalogItem.model_validate(it) if isinstance(it, dict) else it
+                for it in catalogue
+            ]
+        elif isinstance(catalogue, (str, Path)):
+            p = Path(catalogue)
+            if p.is_file():
+                import json
+                raw_cat = json.loads(p.read_text(encoding="utf-8"))
+                items_data = raw_cat.get("items", raw_cat) if isinstance(raw_cat, dict) else raw_cat
+                cat_items = [CatalogItem.model_validate(it) for it in items_data]
+            else:
+                raise FileNotFoundError(f"Catalogue file not found: {catalogue}")
+        elif isinstance(catalogue, dict):
+            items_data = catalogue.get("items", catalogue)
+            cat_items = [CatalogItem.model_validate(it) for it in items_data]
+        else:
+            raise TypeError(f"Unsupported catalogue input type: {type(catalogue)}")
+
+        from pack_manager.catalogue_resolver import resolve_catalogue_skus
+        return resolve_catalogue_skus(
+            observation=observation,
+            catalogue=cat_items,
+            config=config,
+            package_image=package_image,
+        )
+
+
+    def reconcile_manifest(
+        self,
+        order: dict[str, Any] | Order | Path | str,
+        resolution: PackageSKUResolution,
+    ) -> ManifestReconciliation:
+        """STAGE 3: Deterministic Manifest Reconciliation.
+
+        Compares expected order manifest against Stage 2 SKU resolution using pure Python logic.
+        Produces structured categories: matched, missing, extra, quantity mismatches, unverified items,
+        preserving unresolved products and foreign objects. Strictly does NOT make shipping decisions.
+        """
+        from pack_manager.manifest_reconciler import reconcile_manifest
+        return reconcile_manifest(order=order, resolution=resolution)
+
+
+    def decide(
+        self,
+        reconciliation: ManifestReconciliation,
+        observation: Optional[PackageVisualObservation] = None,
+    ) -> DecisionResult:
+        """STAGE 4: Final Deterministic Packing Decision Engine.
+
+        Evaluates Stage 3 manifest reconciliation and optional Stage 1 visual observation.
+        Strict precedence: UNCERTAIN > STOP_FIX > SEAL.
+        """
+        from pack_manager.decision_engine import evaluate_decision
+        return evaluate_decision(reconciliation=reconciliation, observation=observation)
+
+
+    def create_verification_report(
+        self,
+        reconciliation: ManifestReconciliation,
+        decision: DecisionResult,
+        observation: PackageVisualObservation,
+        resolution: PackageSKUResolution,
+        order: Optional[Order | dict[str, Any] | Path | str] = None,
+        *,
+        image_bytes: Optional[bytes] = None,
+        image_sha256: Optional[str] = None,
+    ) -> PackVerificationReport:
+        """STAGE 5: Final Grounded Evidence & Audit Trail Packaging.
+
+        Packages Stages 1-4 into an immutable, audit-grade verification report.
+        Strictly preserves decision, links every observed item to bounding boxes,
+        and provides grounded operator action.
+        """
+        from pack_manager.grounded_audit import build_verification_report
+        return build_verification_report(
+            reconciliation=reconciliation,
+            decision=decision,
+            observation=observation,
+            resolution=resolution,
+            order=order,
+            image_bytes=image_bytes,
+            image_sha256=image_sha256,
+            model_name=getattr(self.vlm, "model_name", None),
+        )
+
+
+    def verify_full(
+        self,
+        order: dict[str, Any] | Order | Path | str,
+        catalogue: list[CatalogItem] | Path | str | dict[str, Any] | None = None,
+        photo: Path | str | bytes | Image.Image = None,
+        image_id: str = "box-photo-0",
+    ) -> PackVerificationReport:
+        """END-TO-END VERIFICATION PIPELINE (Stages 1-5).
+
+        Connects all 5 deterministic and perceptual stages:
+        1. observe_package(photo) -> PackageVisualObservation (order-blind perception)
+        2. resolve_skus(observation, catalogue) -> PackageSKUResolution (order-blind SKU mapping)
+        3. reconcile_manifest(order, resolution) -> ManifestReconciliation (deterministic Python comparison)
+        4. decide(reconciliation, observation) -> DecisionResult (SEAL / STOP_FIX / UNCERTAIN)
+        5. create_verification_report(...) -> PackVerificationReport (traceable grounded evidence)
+        """
+        if photo is None:
+            raise ValueError("Photo input is required for verification.")
+
+        image_bytes, _ = _load_image_bytes(photo)
+
+        cat_items: list[CatalogItem] = []
+        if catalogue is None:
+            from pack_manager.catalogue_resolver import DEMO_FIXTURE_CATALOGUE
+            cat_items = DEMO_FIXTURE_CATALOGUE
+        elif isinstance(catalogue, list):
+            cat_items = [
+                CatalogItem.model_validate(it) if isinstance(it, dict) else it
+                for it in catalogue
+            ]
+        elif isinstance(catalogue, (str, Path)):
+            p = Path(catalogue)
+            if p.is_file():
+                raw_cat = json.loads(p.read_text(encoding="utf-8"))
+                items_data = raw_cat.get("items", raw_cat) if isinstance(raw_cat, dict) else raw_cat
+                cat_items = [CatalogItem.model_validate(it) for it in items_data]
+            else:
+                from pack_manager.catalogue_resolver import DEFAULT_WAREHOUSE_CATALOGUE
+                cat_items = DEFAULT_WAREHOUSE_CATALOGUE
+        elif isinstance(catalogue, dict):
+            items_data = catalogue.get("items", catalogue)
+            cat_items = [CatalogItem.model_validate(it) for it in items_data]
+        else:
+            cat_items = list(catalogue)
+
+        # STAGE 1: Visual Perception (Order-Blind)
+        observation = self.observe_package(photo=photo, image_id=image_id)
+
+        # STAGE 2: SKU / Catalogue Resolution (Order-Blind)
+        resolution = self.resolve_skus(
+            observation=observation,
+            catalogue=cat_items,
+            package_image=photo,
+        )
+
+        # STAGE 3: Deterministic Manifest Reconciliation (Pure Python)
+        reconciliation = self.reconcile_manifest(
+            order=order,
+            resolution=resolution,
+        )
+
+        # STAGE 4: Final Decision Engine (Precedence Gating)
+        decision = self.decide(
+            reconciliation=reconciliation,
+            observation=observation,
+        )
+
+        # STAGE 5: Grounded Evidence & Audit Trail
+        report = self.create_verification_report(
+            reconciliation=reconciliation,
+            decision=decision,
+            observation=observation,
+            resolution=resolution,
+            order=order,
+            image_bytes=image_bytes,
+        )
+
+        return report
 
     def verify(
         self,

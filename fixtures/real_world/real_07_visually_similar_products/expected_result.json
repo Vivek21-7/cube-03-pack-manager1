@@ -1,0 +1,5 @@
+{
+  "expected_decision": "SEAL",
+  "scenario_type": "visually_similar_products",
+  "notes": "Catalogue includes closely related Navy Cap. Clear visual text BLUE CAP and bright blue hue correctly resolves to CAP-BLU-001."
+}

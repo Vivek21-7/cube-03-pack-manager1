@@ -1,0 +1,5 @@
+{
+  "expected_decision": "SEAL",
+  "scenario_type": "correct_order",
+  "notes": "Carton flap is damaged/crushed, but contents match order manifest exactly. Scope rule: carton damage does not trigger STOP_FIX."
+}

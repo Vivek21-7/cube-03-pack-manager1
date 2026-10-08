@@ -1948,6 +1948,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 <div class="scan-laser-line" id="scan-laser-line"></div>
                 <!-- Normal Photo Image -->
                 <img id="details-box-photo" src="" alt="Open Box Photograph" style="opacity:0;">
+                <div id="bbox-overlay-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:20;"></div>
                 <!-- Live Video Element for Camera Feed -->
                 <video id="live-camera-feed" autoplay playsinline style="display:none;"></video>
                 <div id="details-img-loader" style="position: absolute; color: #94a3b8; font-size: 0.85rem; font-weight: 500;">Loading product photo...</div>
@@ -2172,6 +2173,8 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       if (img) {
         img.src = dataUrl;
         img.style.display = "block";
+        var boxCont = document.getElementById("bbox-overlay-container");
+        if (boxCont) boxCont.innerHTML = "";
         img.style.opacity = "1";
       }
 
@@ -2462,77 +2465,163 @@ HTML_TEMPLATE = """<!DOCTYPE html>
       var badgeTitle = isSeal ? "✅ SEAL FOR SHIPPING (PASS)" : (isStop ? "❌ STOP & FIX (HOLD)" : "⚠️ UNCERTAIN (MANUAL REVIEW)");
       var confColor = res.confidence === "high" ? "#10b981" : (res.confidence === "medium" ? "#f59e0b" : "#ef4444");
 
-      var detHtml = "";
-      if (res.detected_items && res.detected_items.length) {
-        detHtml = res.detected_items.map(function(d) {
-          var vTxt = d.variant ? ' <span style="color:#64748b;">(' + d.variant + ')</span>' : '';
-          return '<div style="padding: 6px 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center;">' +
-            '<span><strong>' + d.detected_qty + 'x</strong> ' + d.name + vTxt + '</span>' +
-            '<span style="font-size:0.72rem;color:#2563eb;background:#eff6ff;padding:2px 6px;border-radius:6px;font-weight:600;">' + d.confidence + '</span>' +
-          '</div>';
-        }).join("");
-      } else {
-        detHtml = '<div style="font-size:0.78rem;color:#94a3b8;">No items detected</div>';
+      // Draw bounding boxes on the photo viewport
+      var bboxContainer = document.getElementById("bbox-overlay-container");
+      if (bboxContainer) {
+        bboxContainer.innerHTML = "";
+        var records = res.evidence_records || [];
+        records.forEach(function(rec) {
+          if (!rec.bbox) return;
+          var b = rec.bbox;
+          var ymin = (b.ymin * 100);
+          var xmin = (b.xmin * 100);
+          var width = ((b.xmax - b.xmin) * 100);
+          var height = ((b.ymax - b.ymin) * 100);
+
+          var col = "#10b981"; // green
+          if (rec.status === "AMBIGUOUS" || rec.status === "UNRESOLVED") col = "#f59e0b"; // yellow
+          if (res.decision === "STOP_FIX" && res.extra_items && res.extra_items.some(function(e){ return e.sku === rec.matched_sku; })) {
+            col = "#ef4444"; // red
+          }
+
+          var box = document.createElement("div");
+          box.style.position = "absolute";
+          box.style.top = ymin + "%";
+          box.style.left = xmin + "%";
+          box.style.width = width + "%";
+          box.style.height = height + "%";
+          box.style.border = "2px solid " + col;
+          box.style.borderRadius = "4px";
+          box.style.boxShadow = "0 0 6px " + col + "66";
+          box.style.pointerEvents = "auto";
+          box.title = (rec.object_id || "") + ": " + (rec.matched_sku || rec.observed_label || "");
+
+          var tag = document.createElement("div");
+          tag.style.position = "absolute";
+          tag.style.top = "-16px";
+          tag.style.left = "0";
+          tag.style.background = col;
+          tag.style.color = "#ffffff";
+          tag.style.fontSize = "9px";
+          tag.style.fontWeight = "bold";
+          tag.style.padding = "1px 4px";
+          tag.style.borderRadius = "3px";
+          tag.style.whiteSpace = "nowrap";
+          tag.innerText = (rec.object_id || "") + (rec.matched_sku ? " (" + rec.matched_sku + ")" : "");
+          box.appendChild(tag);
+          bboxContainer.appendChild(box);
+        });
       }
 
-      var matchRows = "";
-      if (res.matches && res.matches.length) {
-        matchRows = res.matches.map(function(m) {
-          var isPass = (m.status === "PASS");
-          return '<tr>' +
-            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9;">' + m.item_name + '</td>' +
-            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.expected_qty + '</td>' +
-            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:center;">' + m.detected_qty + '</td>' +
-            '<td style="padding: 5px 8px; border-bottom: 1px solid #f1f5f9; text-align:right;">' +
-              '<span style="padding: 2px 7px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; background: ' + (isPass ? '#ecfdf5' : '#fef2f2') + '; color: ' + (isPass ? '#059669' : '#dc2626') + ';">' + m.status + '</span>' +
-            '</td>' +
-          '</tr>';
-        }).join("");
-      }
+      // 1. Expected Items
+      var expItems = res.expected_items || [];
+      var expRows = expItems.map(function(it) {
+        return '<tr>' +
+          '<td style="padding: 4px 6px; font-weight: 600;">' + (it.sku || '-') + '</td>' +
+          '<td style="padding: 4px 6px;">' + (it.product_name || '-') + '</td>' +
+          '<td style="padding: 4px 6px; text-align: center; font-weight: 700;">' + (it.expected_qty || 1) + '</td>' +
+        '</tr>';
+      }).join("") || '<tr><td colspan="3" style="padding:4px 6px;color:#94a3b8;">None</td></tr>';
 
-      var hasDamage = res.product_condition && res.product_condition.visible_damage;
+      // 2. Observed Items
+      var obsItems = res.observed_items || [];
+      var obsRows = obsItems.map(function(it) {
+        var conf = (typeof it.confidence === "number") ? (it.confidence * 100).toFixed(0) + "%" : it.confidence;
+        return '<tr>' +
+          '<td style="padding: 4px 6px; font-weight: 600;">' + (it.object_id || '-') + '</td>' +
+          '<td style="padding: 4px 6px;">' + (it.label || '-') + '</td>' +
+          '<td style="padding: 4px 6px; text-align: right; color: #2563eb; font-weight: 600;">' + conf + '</td>' +
+        '</tr>';
+      }).join("") || '<tr><td colspan="3" style="padding:4px 6px;color:#94a3b8;">None</td></tr>';
+
+      // 3. Results (Matched, Missing, Extra, Quantity Mismatches, Unverified)
+      var matchedCount = (res.matched_items || []).reduce(function(a, b){ return a + (b.observed_qty || 1); }, 0);
+      var missingCount = (res.missing_items || []).reduce(function(a, b){ return a + (b.expected_qty || 1); }, 0);
+      var extraCount = (res.extra_items || []).reduce(function(a, b){ return a + (b.observed_qty || 1); }, 0);
+      var qtyMismatchCount = (res.quantity_mismatches || []).length;
+      var unverifiedCount = (res.unverified_items || []).length;
+
+      var resultBadges = `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <span style="padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0;">MATCHED: ${matchedCount}</span>
+          <span style="padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;background:${missingCount > 0 ? '#fef2f2' : '#f8fafc'};color:${missingCount > 0 ? '#991b1b' : '#64748b'};border:1px solid ${missingCount > 0 ? '#fecaca' : '#e2e8f0'};">MISSING: ${missingCount}</span>
+          <span style="padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;background:${extraCount > 0 ? '#fef2f2' : '#f8fafc'};color:${extraCount > 0 ? '#991b1b' : '#64748b'};border:1px solid ${extraCount > 0 ? '#fecaca' : '#e2e8f0'};">EXTRA: ${extraCount}</span>
+          <span style="padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;background:${qtyMismatchCount > 0 ? '#fffbeb' : '#f8fafc'};color:${qtyMismatchCount > 0 ? '#92400e' : '#64748b'};border:1px solid ${qtyMismatchCount > 0 ? '#fde68a' : '#e2e8f0'};">QTY MISMATCH: ${qtyMismatchCount}</span>
+          <span style="padding:3px 8px;border-radius:6px;font-size:0.74rem;font-weight:700;background:${unverifiedCount > 0 ? '#fffbeb' : '#f8fafc'};color:${unverifiedCount > 0 ? '#92400e' : '#64748b'};border:1px solid ${unverifiedCount > 0 ? '#fde68a' : '#e2e8f0'};">UNVERIFIED: ${unverifiedCount}</span>
+        </div>
+      `;
+
+      // 4. Grounded Evidence Records Table
+      var evidenceRecords = res.evidence_records || [];
+      var evidenceRows = evidenceRecords.map(function(ev) {
+        var bboxTxt = ev.bbox ? `[${ev.bbox.ymin.toFixed(2)}, ${ev.bbox.xmin.toFixed(2)}, ${ev.bbox.ymax.toFixed(2)}, ${ev.bbox.xmax.toFixed(2)}]` : '-';
+        var evText = (ev.matching_evidence && ev.matching_evidence.length) ? ev.matching_evidence.join("; ") : (ev.notes || '-');
+        return '<tr>' +
+          '<td style="padding: 4px 6px; font-weight: 700; color: #1e293b;">' + (ev.object_id || '-') + '</td>' +
+          '<td style="padding: 4px 6px; font-family: monospace; font-size: 0.70rem;">' + (ev.image_id || '-') + '</td>' +
+          '<td style="padding: 4px 6px; font-family: monospace; font-size: 0.70rem; color: #64748b;">' + bboxTxt + '</td>' +
+          '<td style="padding: 4px 6px; font-weight: 600; color: #2563eb;">' + (ev.matched_sku || ev.observed_label || '-') + '</td>' +
+          '<td style="padding: 4px 6px; font-size: 0.70rem; color: #475569;">' + evText + '</td>' +
+        '</tr>';
+      }).join("") || '<tr><td colspan="5" style="padding:4px 6px;color:#94a3b8;">No grounded records</td></tr>';
 
       resultsEl.innerHTML = `
-        <!-- Verdict Header -->
+        <!-- Verdict & Operator Action Header -->
         <div style="padding: 12px 14px; background: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 10px; margin-bottom: 10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <span style="font-weight: 700; color: ${badgeColor}; font-size: 0.92rem;">${badgeTitle}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-weight: 800; color: ${badgeColor}; font-size: 0.94rem;">${badgeTitle}</span>
             <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; background: #ffffff; color: ${confColor}; border: 1px solid #e2e8f0;">
               ${(res.confidence ? res.confidence.toUpperCase() : 'HIGH')} CONFIDENCE
             </span>
           </div>
-          <div style="font-size: 0.82rem; color: ${badgeColor}; line-height: 1.4;">
+          <div style="font-size: 0.82rem; font-weight: 700; color: ${badgeColor}; margin-bottom: 4px;">
+            Operator Action: <span style="text-decoration: underline;">${res.operator_action || 'Inspect Carton'}</span>
+          </div>
+          <div style="font-size: 0.78rem; color: ${badgeColor}; line-height: 1.4;">
             ${(res.decision_reason || 'Package contents inspected against expected manifest.')}
           </div>
         </div>
 
-        <!-- Detected Items Grid -->
-        <div style="margin-bottom: 10px;">
-          <div style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Visual Detections by Agent:</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">${detHtml}</div>
-        </div>
+        <!-- Result Breakdown Badges -->
+        ${resultBadges}
 
-        <!-- Match Reconciliation Table -->
-        ${matchRows ? `
-          <div style="margin-bottom: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.78rem;">
-              <thead style="background: #f8fafc; color: var(--text-muted); font-size: 0.72rem;">
-                <tr>
-                  <th style="padding: 5px 8px; text-align: left;">Item</th>
-                  <th style="padding: 5px 8px; text-align: center;">Exp</th>
-                  <th style="padding: 5px 8px; text-align: center;">Det</th>
-                  <th style="padding: 5px 8px; text-align: right;">Match</th>
-                </tr>
-              </thead>
-              <tbody>${matchRows}</tbody>
+        <!-- Expected vs Observed Manifest Panels -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.74rem;">
+            <div style="font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Expected Manifest</div>
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="color:#64748b;border-bottom:1px solid #e2e8f0;"><th style="text-align:left;padding:2px 4px;">SKU</th><th style="text-align:left;padding:2px 4px;">Product</th><th style="text-align:center;padding:2px 4px;">Qty</th></tr></thead>
+              <tbody>${expRows}</tbody>
             </table>
           </div>
-        ` : ''}
+          <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:8px;font-size:0.74rem;">
+            <div style="font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Observed Items</div>
+            <table style="width:100%;border-collapse:collapse;">
+              <thead><tr style="color:#64748b;border-bottom:1px solid #e2e8f0;"><th style="text-align:left;padding:2px 4px;">ID</th><th style="text-align:left;padding:2px 4px;">Visual Label</th><th style="text-align:right;padding:2px 4px;">Conf</th></tr></thead>
+              <tbody>${obsRows}</tbody>
+            </table>
+          </div>
+        </div>
 
-        <!-- Packaging Condition -->
-        <div style="padding: 7px 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 0.76rem; display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
-          <span><strong>Packaging Integrity:</strong> ${hasDamage ? '⚠️ Damage Detected' : '✅ Undamaged'}</span>
-          <span style="color:var(--text-muted);font-size:0.72rem;">${(res.product_condition ? res.product_condition.notes : '')}</span>
+        <!-- Grounded Evidence Audit Trail -->
+        <div style="margin-bottom: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+          <div style="padding: 6px 10px; background: #f8fafc; font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">
+            Grounded Evidence &amp; Spatial Alignment
+          </div>
+          <div style="max-height: 140px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.74rem;">
+              <thead style="background: #f1f5f9; color: var(--text-muted); font-size: 0.70rem;">
+                <tr>
+                  <th style="padding: 4px 6px; text-align: left;">Object</th>
+                  <th style="padding: 4px 6px; text-align: left;">Image</th>
+                  <th style="padding: 4px 6px; text-align: left;">Bounding Box</th>
+                  <th style="padding: 4px 6px; text-align: left;">Resolved SKU</th>
+                  <th style="padding: 4px 6px; text-align: left;">Matching Evidence</th>
+                </tr>
+              </thead>
+              <tbody>${evidenceRows}</tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Operator Action Buttons -->
@@ -2543,10 +2632,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           }
         </div>
 
-        <!-- Collapsible Canonical Agent JSON -->
+        <!-- Collapsible Audit JSON -->
         <details style="margin-top: 4px;">
-          <summary style="font-size: 0.74rem; font-weight: 700; color: #2563eb; cursor: pointer;">🔍 View Canonical Agent JSON Payload</summary>
-          <pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 8px; font-size: 0.72rem; overflow-x: auto; margin-top: 6px; max-height: 160px;">${JSON.stringify(res, null, 2)}</pre>
+          <summary style="font-size: 0.74rem; font-weight: 700; color: #2563eb; cursor: pointer;">🔍 View Stage 5 PackVerificationReport JSON</summary>
+          <pre style="background: #0f172a; color: #38bdf8; padding: 10px; border-radius: 8px; font-size: 0.70rem; overflow-x: auto; margin-top: 6px; max-height: 160px;">${JSON.stringify(res, null, 2)}</pre>
         </details>
       `;
 
@@ -2749,11 +2838,36 @@ class PackManagerRequestHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": f"API Key Required: {ve}"})
                 return
 
+            catalogue_payload = req.get("catalogue")
             agent = PackManagerAIAgent(vlm_client=vlm)
 
             try:
-                result = agent.verify(order=order_payload, photo=photo_bytes)
-                self._send_json(200, result.to_summary_dict())
+                report = agent.verify_full(
+                    order=order_payload,
+                    catalogue=catalogue_payload,
+                    photo=photo_bytes,
+                )
+                report_dict = report.model_dump()
+                # Backward-compatibility bridges for frontend / existing clients
+                report_dict["matches"] = [
+                    {
+                        "item_name": m.get("product_name") or m.get("sku"),
+                        "expected_qty": m.get("expected_qty", 1),
+                        "detected_qty": m.get("observed_qty", 1),
+                        "status": "PASS",
+                        "variant_match": True,
+                    }
+                    for m in report_dict.get("matched_items", [])
+                ]
+                has_damage = any(
+                    "damage" in str(b).lower()
+                    for b in report_dict.get("blocking_issues", [])
+                )
+                report_dict["product_condition"] = {
+                    "visible_damage": has_damage,
+                    "notes": "Packaging damaged" if has_damage else "Carton intact",
+                }
+                self._send_json(200, report_dict)
             except Exception as e:
                 logger.exception("Verification execution failed")
                 self._send_json(400, {"error": f"Inspection failed: {e}"})

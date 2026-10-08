@@ -16,3 +16,4 @@ build/
 scratch/
 *.onnx
 .DS_Store
+.env.local

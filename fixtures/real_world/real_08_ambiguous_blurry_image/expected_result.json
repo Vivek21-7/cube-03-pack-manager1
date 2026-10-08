@@ -1,0 +1,5 @@
+{
+  "expected_decision": "UNCERTAIN",
+  "scenario_type": "ambiguous_blurry_image",
+  "notes": "Heavy blur prohibits confident identification of package contents. System must output UNCERTAIN."
+}

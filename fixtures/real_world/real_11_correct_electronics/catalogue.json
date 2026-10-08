@@ -1,0 +1,12 @@
+[
+  {
+    "sku": "CAM-ACT-001",
+    "product_name": "Action Camera 4K",
+    "category": "electronics",
+    "attributes": {
+      "color": "black",
+      "model": "4K"
+    },
+    "reference_images": []
+  }
+]
