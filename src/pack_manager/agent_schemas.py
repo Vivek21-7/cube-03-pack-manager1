@@ -344,7 +344,7 @@ class ManifestReconciliation(BaseModel):
 
 ConfidenceLevel = Literal["high", "medium", "low"]
 DecisionType = Literal["SEAL", "STOP_FIX", "UNCERTAIN"]
-MatchStatusType = Literal["PASS", "FAIL"]
+MatchStatusType = Literal["PASS", "FAIL", "UNCERTAIN"]
 
 
 
@@ -520,6 +520,7 @@ class PackManagerAIResponse(BaseModel):
         has_missing = len(self.missing_items) > 0
         has_extra = len(self.extra_items) > 0
         has_failed_match = any(m.status == "FAIL" for m in self.matches)
+        has_uncertain_match = any(m.status == "UNCERTAIN" for m in self.matches)
         has_damage = self.product_condition.visible_damage
 
         if self.decision == "SEAL":
@@ -528,7 +529,7 @@ class PackManagerAIResponse(BaseModel):
                 self.decision = "STOP_FIX"
                 if not self.decision_reason:
                     self.decision_reason = "Defects detected during package verification."
-            elif self.confidence == "low":
+            elif self.confidence == "low" or has_uncertain_match:
                 self.decision = "UNCERTAIN"
                 if not self.decision_reason:
                     self.decision_reason = "Inspection confidence is low; manual review required."

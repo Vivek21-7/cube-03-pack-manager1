@@ -182,6 +182,7 @@ class PackManagerAIAgent:
 
     def __init__(self, vlm_client: VLMClient | None = None) -> None:
         self.vlm = vlm_client or get_vlm_client()
+        self.inspect_calls = 0
 
     def observe_package(
         self,
@@ -433,6 +434,7 @@ class PackManagerAIAgent:
             )
         except TypeError:
             raw_output = self.vlm.inspect(prompt, image_bytes, mime_type=mime_type)
+        self.inspect_calls += 1
         cleaned_json = _clean_json_markdown(raw_output)
 
         try:
@@ -457,7 +459,11 @@ class PackManagerAIAgent:
         extra_items = []
         
         detected_unmatched = list(response.detected_items)
-        
+        model_uncertain = [m.item_name for m in response.matches if m.status == "UNCERTAIN"]
+
+        def model_said_uncertain(name: str) -> bool:
+            return any(_names_refer_to_same_item(name, other) for other in model_uncertain)
+
         for expected in response.order_items:
             best_match_idx = -1
             for i, det in enumerate(detected_unmatched):
@@ -482,6 +488,8 @@ class PackManagerAIAgent:
                 
                 detected_qty = det.detected_qty
                 status = "PASS" if detected_qty == expected.expected_qty and variant_match and brand_match else "FAIL"
+                if model_said_uncertain(expected.name):
+                    status = "UNCERTAIN"
                 
                 matches.append(MatchResultAI(
                     item_name=expected.name,
@@ -510,7 +518,7 @@ class PackManagerAIAgent:
                     expected_qty=expected.expected_qty,
                     detected_qty=0,
                     variant_match=False,
-                    status="FAIL"
+                    status="UNCERTAIN" if model_said_uncertain(expected.name) else "FAIL"
                 ))
                 missing_items.append(MissingItemAI(
                     item_name=expected.name,
@@ -533,11 +541,19 @@ class PackManagerAIAgent:
         has_extra = len(extra_items) > 0
         has_failed_match = any(m.status == "FAIL" for m in matches)
         has_damage = _product_itself_damaged(response.product_condition)
+        uncertain_lines = [m.item_name for m in matches if m.status == "UNCERTAIN"]
 
         if any(d.confidence == "low" for d in response.detected_items) or response.confidence == "low" or any(d.brand == "Unknown" for d in response.detected_items):
             response.decision = "UNCERTAIN"
             response.decision_reason = (
                 "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed."
+            )
+        elif uncertain_lines:
+            model_reason = (response.decision_reason or "").strip()
+            response.decision = "UNCERTAIN"
+            response.decision_reason = (
+                f"The model could not confirm {', '.join(uncertain_lines)}, so this pack cannot be sealed."
+                + (f" Model: {model_reason}" if model_reason else "")
             )
         elif has_missing or has_extra or has_failed_match or has_damage:
             response.decision = "STOP_FIX"

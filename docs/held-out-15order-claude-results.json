@@ -1,0 +1,1707 @@
+[
+  {
+    "order_id": "ORD-002",
+    "label": {
+      "order_id": "ORD-002",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "yes",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "Open box has the pad, cable, and adapter, and the other photo shows a second tablet."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-002",
+      "order_items": [
+        {
+          "name": "OnePlus Pad Wi-Fi",
+          "brand": "OnePlus",
+          "expected_qty": 1,
+          "variant": "Halo Green, 12GB RAM, 256GB",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "OnePlus Pad",
+          "brand": "OnePlus",
+          "detected_qty": 1,
+          "variant": "Cannot determine color variant - appears dark/black on screen, packaging shows OnePlus Pad branding",
+          "confidence": "high",
+          "notes": "Tablet is powered on and functional, clearly visible OnePlus Pad retail box in both images",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power Adapter",
+          "brand": "Generic/OEM",
+          "detected_qty": 1,
+          "variant": "White wall charger with EU/international prongs",
+          "confidence": "high",
+          "notes": "White power adapter visible in image 1, has CE marking",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "USB Cable",
+          "brand": "Generic/OEM",
+          "detected_qty": 1,
+          "variant": "Red cable wrapped/coiled",
+          "confidence": "high",
+          "notes": "Red charging cable visible coiled in image 1",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "OnePlus Pad Wi-Fi",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Power Adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "USB Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Tablet is powered on and displaying home screen normally. Retail packaging intact. No visible damage to tablet or accessories."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 2 item(s).",
+      "confidence": "medium",
+      "evidence": [
+        "OnePlus Pad tablet present and functional - quantity matches",
+        "Standard accessories present (charger and cable)",
+        "Cannot confirm Halo Green color variant from images",
+        "Cannot verify RAM/storage specifications externally",
+        "Packaging shows OnePlus Pad branding but variant details not legible"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-004",
+    "label": {
+      "order_id": "ORD-004",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open carton shows the black bar, subwoofer, remote, cable, and adapter."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-004",
+      "order_items": [
+        {
+          "name": "GOVO GoSurround 940",
+          "brand": "GOVO",
+          "expected_qty": 1,
+          "variant": "2.1, black",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Soundbar",
+          "brand": "GOVO",
+          "detected_qty": 1,
+          "variant": "black",
+          "confidence": "high",
+          "notes": "Black soundbar visible, GOVO branding visible on unit",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Subwoofer",
+          "brand": "GOVO",
+          "detected_qty": 1,
+          "variant": "black",
+          "confidence": "high",
+          "notes": "Black subwoofer with GOVO branding visible, marked 'GO 10' on side",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Remote control",
+          "brand": "GOVO",
+          "detected_qty": 1,
+          "variant": "black/silver",
+          "confidence": "medium",
+          "notes": "Remote control visible in plastic bag with documentation",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power cable",
+          "brand": "Generic",
+          "detected_qty": 1,
+          "variant": "black",
+          "confidence": "high",
+          "notes": "Black power cable visible in foreground",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Audio cable",
+          "brand": "Generic",
+          "detected_qty": 1,
+          "variant": "black",
+          "confidence": "medium",
+          "notes": "Cable visible in plastic bag",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Documentation/Manual",
+          "brand": "GOVO",
+          "detected_qty": 1,
+          "variant": "paper",
+          "confidence": "high",
+          "notes": "User manual/documentation visible in plastic bag",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "GOVO GoSurround 940",
+          "expected_qty": 1,
+          "detected_qty": 0,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [
+        {
+          "item_name": "GOVO GoSurround 940",
+          "expected_qty": 1,
+          "reason": "Not visible in box"
+        }
+      ],
+      "extra_items": [
+        {
+          "item_name": "Soundbar",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Subwoofer",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Remote control",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Power cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Audio cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Documentation/Manual",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Products appear intact with no visible damage. Soundbar and subwoofer in good condition. All components properly packaged."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Missing 1 item(s) | Extra 6 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Soundbar (main unit) clearly visible with GOVO branding",
+        "Subwoofer present with GOVO GO 10 marking confirming brand",
+        "2.1 channel system configuration confirmed (1 soundbar + 1 subwoofer)",
+        "Black color variant matches order specification",
+        "All standard accessories present (remote, cables, manual)",
+        "No missing components",
+        "No extra items not on order",
+        "No visible damage to products"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-005",
+    "label": {
+      "order_id": "ORD-005",
+      "item_presence": "yes",
+      "quantity_match": "no",
+      "item_identity": "no",
+      "extra_item": "yes",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "One photo is a horizontal boAt speaker by an open box, and the other is a different tall tower."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-005",
+      "order_items": [
+        {
+          "name": "boAt PartyPal 60",
+          "brand": "boAt",
+          "expected_qty": 1,
+          "variant": "Black",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "boAt PartyPal 60 Bluetooth Speaker",
+          "brand": "boAt",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Party speaker with dual drivers and LED lights visible. Product matches retail box branding. Box shows 'WHERE'S THE PARTY AT?' marketing text and boAt branding clearly visible.",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power Cable/Charging Cable",
+          "brand": "boAt",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black cable visible next to the product box in first image",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Retail Box",
+          "brand": "boAt",
+          "detected_qty": 1,
+          "variant": "Dark gray",
+          "confidence": "high",
+          "notes": "boAt branded retail packaging visible with product image and branding",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "boAt PartyPal 60",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Power Cable/Charging Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Retail Box",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Product appears intact with LED lights functioning (blue lights visible in first image). Retail box and packaging present. No visible damage to speaker unit or packaging."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 2 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "boAt PartyPal 60 speaker clearly visible with brand markings",
+        "Product matches variant (Black color) specified in order",
+        "Quantity correct: 1 unit as expected",
+        "Retail packaging present with matching product imagery",
+        "Charging cable included as standard accessory",
+        "LED functionality visible indicating product is operational",
+        "No physical damage visible to product or packaging"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-010",
+    "label": {
+      "order_id": "ORD-010",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "yes",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "The watch is in the open tray, and the magnetic charging cable is not in these photos."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-010",
+      "order_items": [
+        {
+          "name": "Noise smartwatch",
+          "brand": "Noise",
+          "expected_qty": 1,
+          "variant": "Rose-gold case, black strap",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Noise smartwatch",
+          "brand": "Noise",
+          "detected_qty": 1,
+          "variant": "Rose-gold case, black strap",
+          "confidence": "high",
+          "notes": "Smartwatch clearly visible in both images with rose-gold/copper colored case and black silicone strap. Display is active showing time. Branding 'Noise' visible on packaging box.",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Noise smartwatch",
+          "brand": "Noise",
+          "detected_qty": 1,
+          "variant": "Black case, dark green/teal strap",
+          "confidence": "high",
+          "notes": "Second smartwatch visible in first image with black case and dark green/teal colored strap. Display shows time 01:39. This is a different unit with different color variant than expected.",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Charging cable",
+          "brand": "Noise",
+          "detected_qty": 1,
+          "variant": "White",
+          "confidence": "high",
+          "notes": "White charging cable visible in open box in first image",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Product box",
+          "brand": "Noise",
+          "detected_qty": 1,
+          "variant": "White retail packaging",
+          "confidence": "high",
+          "notes": "Noise branded retail box visible with product imagery and 'Listen to the Noise within' tagline",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Noise smartwatch",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Noise smartwatch",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Charging cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Product box",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to products or packaging. Both smartwatch units appear intact with functioning displays. Packaging box in good condition."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 3 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Expected rose-gold case black strap smartwatch is present and correct",
+        "Additional smartwatch with black case and green/teal strap detected - not in order",
+        "Both watches clearly visible with different color variants",
+        "No missing items from order",
+        "No visible damage to any products"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-015",
+    "label": {
+      "order_id": "ORD-015",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open carton shows the Dell panel, stand, neck, and both cables."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-015",
+      "order_items": [
+        {
+          "name": "Dell 24-inch monitor",
+          "brand": "Dell",
+          "expected_qty": 1,
+          "variant": "24-inch, black",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Dell monitor",
+          "brand": "Dell",
+          "detected_qty": 1,
+          "variant": "appears to be 24-inch, black frame",
+          "confidence": "high",
+          "notes": "Dell branding visible on monitor bezel, black frame, size consistent with 24-inch specification",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power adapter",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "black power brick with detachable plug",
+          "confidence": "high",
+          "notes": "Black power adapter with AC plug attachment visible in upper left",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Cable",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "black cable, appears to be power cable",
+          "confidence": "high",
+          "notes": "Black cable coiled in upper portion of box, likely power cable",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Cable",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "black cable, appears to be video cable",
+          "confidence": "medium",
+          "notes": "Second black cable visible, likely DisplayPort or HDMI cable",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Stand or base component",
+          "brand": "Dell",
+          "detected_qty": 1,
+          "variant": "dark gray/black component",
+          "confidence": "medium",
+          "notes": "Dark component visible in upper right, appears to be monitor stand or base",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Dell 24-inch monitor",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Power adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Stand or base component",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to monitor or accessories. All items appear intact and properly packaged in cardboard box with protective inserts."
+      },
+      "decision": "UNCERTAIN",
+      "decision_reason": "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed.",
+      "confidence": "high",
+      "evidence": [
+        "Dell monitor with visible branding matches order specification",
+        "Monitor appears to be 24-inch based on proportion and packaging",
+        "Black frame variant matches order",
+        "Standard monitor accessories present (power adapter, cables, stand)",
+        "No visible damage to product or packaging",
+        "All components properly secured in protective cardboard insert"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-018",
+    "label": {
+      "order_id": "ORD-018",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "yes",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "Open box layout shows the orange iPhone and cable, plus a separate black case."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-018",
+      "order_items": [
+        {
+          "name": "Apple iPhone",
+          "brand": "Apple",
+          "expected_qty": 1,
+          "variant": "Cosmic Orange",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "iPhone",
+          "brand": "Apple",
+          "detected_qty": 1,
+          "variant": "Orange",
+          "confidence": "high",
+          "notes": "Orange iPhone visible with triple camera system, matches retail box showing same orange device",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "iPhone Retail Box",
+          "brand": "Apple",
+          "detected_qty": 1,
+          "variant": "Orange iPhone packaging",
+          "confidence": "high",
+          "notes": "White retail box with orange iPhone image visible on front",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "USB-C Cable",
+          "brand": "Apple",
+          "detected_qty": 1,
+          "variant": "White braided cable",
+          "confidence": "high",
+          "notes": "White braided USB-C cable, standard iPhone accessory",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Phone Case",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black protective case with camera cutouts",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "MagSafe Charger",
+          "brand": "Apple",
+          "detected_qty": 1,
+          "variant": "White",
+          "confidence": "medium",
+          "notes": "White circular wireless charger in box, appears to be MagSafe charger",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power Adapter",
+          "brand": "Apple",
+          "detected_qty": 1,
+          "variant": "White",
+          "confidence": "medium",
+          "notes": "White rectangular power adapter visible at bottom",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Apple iPhone",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "iPhone Retail Box",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "USB-C Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Phone Case",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "MagSafe Charger",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Power Adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to iPhone, retail packaging, or accessories. All items appear new and in excellent condition."
+      },
+      "decision": "UNCERTAIN",
+      "decision_reason": "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed.",
+      "confidence": "high",
+      "evidence": [
+        "Orange iPhone matches expected variant and quantity",
+        "Retail box confirms authentic Apple iPhone",
+        "Black phone case is extra item not on order",
+        "MagSafe charger is extra item not on order",
+        "Power adapter is extra item not on order",
+        "USB-C cable is extra item not on order",
+        "No visible product damage"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-021",
+    "label": {
+      "order_id": "ORD-021",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "no",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "Open box shows black headphones and a cable, not the blue or purple pair on the order."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-021",
+      "order_items": [
+        {
+          "name": "Boult Mustang Q1 wireless headphones",
+          "brand": "Boult",
+          "expected_qty": 1,
+          "variant": "Blue / Purple",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Wireless headphones",
+          "brand": "Boult",
+          "detected_qty": 1,
+          "variant": "Black/Gray",
+          "confidence": "high",
+          "notes": "Box clearly shows Boult brand, product appears to be black/gray colored headphones, not blue/purple as expected",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "USB charging cable",
+          "brand": "Generic",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Standard accessory cable visible in box",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "User manual/documentation",
+          "brand": "Boult",
+          "detected_qty": 2,
+          "variant": "N/A",
+          "confidence": "high",
+          "notes": "Small blue manual and additional documentation visible",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Boult Mustang Q1 wireless headphones",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "USB charging cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "User manual/documentation",
+          "qty": 2,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Product and packaging appear intact, no visible damage to headphones or box"
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 3 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Boult brand clearly visible on retail box",
+        "Headphones present in quantity of 1",
+        "Color variant is Black/Gray, not Blue/Purple as ordered",
+        "Standard accessories (cable, manuals) present",
+        "No visible product damage"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-022",
+    "label": {
+      "order_id": "ORD-022",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open carton holds the wrapped bar, and the other photo shows the black Mivi bar, remote, and adapter."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-022",
+      "order_items": [
+        {
+          "name": "Mivi soundbar",
+          "brand": "Mivi",
+          "expected_qty": 1,
+          "variant": "Black",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Mivi soundbar",
+          "brand": "Mivi",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black soundbar with 'MIVI' branding clearly visible on front",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power adapter",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black power adapter with cable visible in second image",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Remote control",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black/Gray",
+          "confidence": "high",
+          "notes": "Remote control visible in second image next to power adapter",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Audio cable",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Small black cable visible in second image",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Mivi soundbar",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Power adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Remote control",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Audio cable",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Soundbar and accessories appear intact. Shipping carton shows minor wear on edges but products are undamaged"
+      },
+      "decision": "UNCERTAIN",
+      "decision_reason": "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed.",
+      "confidence": "medium",
+      "evidence": [
+        "Mivi soundbar identified and quantity matches (1 unit)",
+        "Variant matches (Black)",
+        "Three accessories detected that are not listed in order manifest",
+        "All items appear undamaged",
+        "Order specification unclear on whether accessories should be listed separately"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-027",
+    "label": {
+      "order_id": "ORD-027",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open Beardo box shows the trimmer, cable, and attachments."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-027",
+      "order_items": [
+        {
+          "name": "Beardo Chrome Beast Multipurpose Trimmer",
+          "brand": "Beardo",
+          "expected_qty": 1,
+          "variant": "Black / chrome",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Beardo Chrome Beast Multipurpose Trimmer",
+          "brand": "Beardo",
+          "detected_qty": 1,
+          "variant": "Black / chrome",
+          "confidence": "high",
+          "notes": "Main trimmer unit visible with Beardo branding, silver/chrome body with black accents",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Trimmer comb attachment",
+          "brand": "Beardo",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Plastic comb guide attachment visible at top of box in image 2",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power adapter/charger",
+          "brand": "Beardo",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black charging adapter visible in plastic wrapping in image 1",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Additional accessories in plastic bags",
+          "brand": "Beardo",
+          "detected_qty": 1,
+          "variant": "Various",
+          "confidence": "medium",
+          "notes": "Multiple small items wrapped in clear plastic visible in image 1, appear to be additional trimmer heads or attachments",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Beardo Chrome Beast Multipurpose Trimmer",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Trimmer comb attachment",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Power adapter/charger",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Additional accessories in plastic bags",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Product appears intact with all components properly packaged. Main unit shows no visible damage. Accessories are sealed in protective plastic wrapping. Box is in good condition."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 3 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Main Beardo Chrome Beast trimmer unit clearly visible with correct color variant",
+        "Standard accessories present: power adapter, comb attachment, additional trimmer heads",
+        "All items properly packaged in protective plastic",
+        "No visible product damage",
+        "Box and contents match expected order specification"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-028",
+    "label": {
+      "order_id": "ORD-028",
+      "item_presence": "no",
+      "quantity_match": "no",
+      "item_identity": "unclear",
+      "extra_item": "no",
+      "missing_item": "yes",
+      "product_damage": "unclear",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "Open box shows the cable and adapter, and the handset is not in the photo."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-028",
+      "order_items": [
+        {
+          "name": "Ai+ Pulse 2 smartphone",
+          "brand": "Ai+",
+          "expected_qty": 1,
+          "variant": "Blue",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Smartphone device",
+          "brand": "UNCERTAIN - possible Ai+ based on logo",
+          "detected_qty": 1,
+          "variant": "Dark color - cannot confirm Blue",
+          "confidence": "medium",
+          "notes": "One smartphone visible in bottom compartment with logo that appears to show 'Ai+' branding, but color appears dark/black rather than blue due to lighting or actual color",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Charging cable",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "One black charging cable visible in upper compartment, coiled",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Small accessory item",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Metal/silver color",
+          "confidence": "medium",
+          "notes": "One small metal item visible in middle compartment - appears to be SIM ejector tool or similar accessory",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Ai+ Pulse 2 smartphone",
+          "expected_qty": 1,
+          "detected_qty": 0,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [
+        {
+          "item_name": "Ai+ Pulse 2 smartphone",
+          "expected_qty": 1,
+          "reason": "Not visible in box"
+        }
+      ],
+      "extra_items": [
+        {
+          "item_name": "Smartphone device",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Charging cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Small accessory item",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to smartphone or packaging. Device appears intact in protective compartment."
+      },
+      "decision": "UNCERTAIN",
+      "decision_reason": "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed.",
+      "confidence": "medium",
+      "evidence": [
+        "One smartphone detected matching expected quantity",
+        "Ai+ branding appears visible on device",
+        "Color variant cannot be confirmed as Blue - appears dark/black",
+        "Standard accessories present (cable, SIM tool)",
+        "No visible product damage"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-031",
+    "label": {
+      "order_id": "ORD-031",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Glasses, case, and cloth are on the open box."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-031",
+      "order_items": [
+        {
+          "name": "Louis Kouros Aviator Sunglasses",
+          "brand": "Louis Kouros",
+          "expected_qty": 1,
+          "variant": "",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Aviator Sunglasses",
+          "brand": "Louis Kouros",
+          "detected_qty": 1,
+          "variant": "Gold frame with gradient lenses",
+          "confidence": "high",
+          "notes": "Sunglasses clearly visible with Louis Kouros branding on lens and case",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Protective Case",
+          "brand": "Louis Kouros",
+          "detected_qty": 1,
+          "variant": "Black leather with gold logo",
+          "confidence": "high",
+          "notes": "Case present with matching Louis Kouros branding",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Cleaning Cloth",
+          "brand": "Louis Kouros",
+          "detected_qty": 1,
+          "variant": "White with logo visible in packaging",
+          "confidence": "medium",
+          "notes": "Cloth visible in sealed plastic packaging at bottom of frame",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Louis Kouros Aviator Sunglasses",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Protective Case",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Cleaning Cloth",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to sunglasses, case, or packaging. Products appear in new condition with protective packaging intact."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 2 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Louis Kouros Aviator Sunglasses clearly visible with matching brand logos",
+        "Quantity matches: 1 pair expected, 1 pair detected",
+        "Protective case with Louis Kouros branding present",
+        "Cleaning cloth in sealed packaging visible",
+        "No visible damage to sunglasses, lenses, frame, or case",
+        "All items appear new and properly packaged"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-040",
+    "label": {
+      "order_id": "ORD-040",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "unclear",
+      "product_damage": "no",
+      "expected_verdict": "UNCERTAIN",
+      "labeler": "Ruthvik",
+      "notes": "The SSD and papers are in the open tray, and a separate USB cable is not clearly visible."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-040",
+      "order_items": [
+        {
+          "name": "SanDisk Portable SSD 1TB",
+          "brand": "SanDisk",
+          "expected_qty": 1,
+          "variant": "Black, 1TB",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "SanDisk Portable SSD",
+          "brand": "SanDisk",
+          "detected_qty": 1,
+          "variant": "Black, appears to be 520MB/s model",
+          "confidence": "high",
+          "notes": "Black textured SSD visible in white retail packaging. SanDisk branding clearly visible on device. Red retail box shows '1TB/To' capacity label and 520 model designation. Device matches expected SanDisk portable SSD.",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "SanDisk Portable SSD 1TB",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to SSD device or retail packaging. Product appears intact and properly packaged in original SanDisk retail box and internal white tray."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Variant/color mismatch.",
+      "confidence": "high",
+      "evidence": [
+        "SanDisk branding clearly visible on black textured SSD device",
+        "1TB capacity confirmed on retail box label",
+        "Quantity matches: 1 unit expected, 1 unit detected",
+        "Black color variant matches specification",
+        "No additional items present in packaging",
+        "Product and packaging show no visible damage"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-042",
+    "label": {
+      "order_id": "ORD-042",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open box shows the black gun, four heads, and the charging cable."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-042",
+      "order_items": [
+        {
+          "name": "AGARO Regal Gun Massager",
+          "brand": "AGARO",
+          "expected_qty": 1,
+          "variant": "Black",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Massage Gun Main Unit",
+          "brand": "AGARO",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "AGARO branding clearly visible on black cylindrical massage gun body",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Massage Gun Attachments/Heads",
+          "brand": "AGARO",
+          "detected_qty": 4,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Four different massage head attachments visible: round ball head, U-shaped fork head, bullet/point head, and flat head",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Charging Cable",
+          "brand": "Generic",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "high",
+          "notes": "Black coiled charging cable visible in lower portion of box",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Extension Handle/Adapter",
+          "brand": "AGARO",
+          "detected_qty": 1,
+          "variant": "Black",
+          "confidence": "medium",
+          "notes": "Small cylindrical black component visible, appears to be extension or adapter piece",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "AGARO Regal Gun Massager",
+          "expected_qty": 1,
+          "detected_qty": 0,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [
+        {
+          "item_name": "AGARO Regal Gun Massager",
+          "expected_qty": 1,
+          "reason": "Not visible in box"
+        }
+      ],
+      "extra_items": [
+        {
+          "item_name": "Massage Gun Main Unit",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Massage Gun Attachments/Heads",
+          "qty": 4,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Charging Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Extension Handle/Adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "All components appear intact and undamaged. White molded insert properly holds all items. Products show no visible cracks, scratches or defects. Box cardboard shows normal handling wear but no structural damage."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Missing 1 item(s) | Extra 7 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "AGARO brand clearly visible on massage gun body",
+        "Complete massage gun set with main unit and all accessories",
+        "All components properly fitted in protective molded insert",
+        "Black color variant matches order specification",
+        "No visible damage to any components",
+        "Quantity matches: 1 massage gun unit as ordered"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-044",
+    "label": {
+      "order_id": "ORD-044",
+      "item_presence": "no",
+      "quantity_match": "no",
+      "item_identity": "no",
+      "extra_item": "no",
+      "missing_item": "yes",
+      "product_damage": "no",
+      "expected_verdict": "FAIL",
+      "labeler": "Ruthvik",
+      "notes": "Open box shows a 100W charger and cable, and the phone is not in the box."
+    },
+    "photo_count": 1,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-044",
+      "order_items": [
+        {
+          "name": "POCO X8 Pro Max 5G",
+          "brand": "POCO",
+          "expected_qty": 1,
+          "variant": "Blue",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Smartphone",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "Black device visible",
+          "confidence": "medium",
+          "notes": "Black smartphone visible in upper portion of image, cannot confirm brand or model from visible angles",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power Adapter",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "White with '100W' text visible",
+          "confidence": "high",
+          "notes": "White power adapter clearly visible with '100W' marking",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "USB Cable",
+          "brand": "Unknown",
+          "detected_qty": 1,
+          "variant": "White",
+          "confidence": "high",
+          "notes": "White USB cable coiled and visible in box",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Documentation/Manuals",
+          "brand": "Unknown",
+          "detected_qty": 3,
+          "variant": "White boxes/booklets",
+          "confidence": "high",
+          "notes": "Multiple white rectangular items that appear to be user manuals or warranty cards",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "POCO X8 Pro Max 5G",
+          "expected_qty": 1,
+          "detected_qty": 0,
+          "variant_match": false,
+          "brand_match": true,
+          "status": "FAIL"
+        }
+      ],
+      "missing_items": [
+        {
+          "item_name": "POCO X8 Pro Max 5G",
+          "expected_qty": 1,
+          "reason": "Not visible in box"
+        }
+      ],
+      "extra_items": [
+        {
+          "item_name": "Smartphone",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Power Adapter",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "USB Cable",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Documentation/Manuals",
+          "qty": 3,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "No visible damage to products or packaging. Yellow retail box appears intact."
+      },
+      "decision": "UNCERTAIN",
+      "decision_reason": "At least one visible item is low confidence or the brand is not clear, so this pack cannot be sealed.",
+      "confidence": "low",
+      "evidence": [
+        "Smartphone detected but brand/model not verifiable from image",
+        "Device appears black, order specifies Blue variant",
+        "Standard accessories present (charger, cable, documentation)",
+        "No visible product damage",
+        "Cannot confirm device identity without seeing branding or turning device to show color"
+      ]
+    }
+  },
+  {
+    "order_id": "ORD-050",
+    "label": {
+      "order_id": "ORD-050",
+      "item_presence": "yes",
+      "quantity_match": "yes",
+      "item_identity": "yes",
+      "extra_item": "no",
+      "missing_item": "no",
+      "product_damage": "no",
+      "expected_verdict": "PASS",
+      "labeler": "Ruthvik",
+      "notes": "Open carton shows the wrapped iron, and the other photo shows the soleplate, cord, and manual."
+    },
+    "photo_count": 2,
+    "model": "claude-sonnet-4-5",
+    "calls": 1,
+    "output": {
+      "order_id": "ORD-050",
+      "order_items": [
+        {
+          "name": "Havells Glace Plus 1000 W Dry Iron",
+          "brand": "Havells",
+          "expected_qty": 1,
+          "variant": "Blue and white",
+          "sku": null
+        }
+      ],
+      "detected_items": [
+        {
+          "name": "Dry Iron",
+          "brand": "Havells",
+          "detected_qty": 1,
+          "variant": "Blue and white",
+          "confidence": "high",
+          "notes": "Iron visible in second image with blue and white color scheme. Retail box visible in first image shows 'Glace Plus' branding. Iron appears to match expected model.",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Power Cord",
+          "brand": "Generic",
+          "detected_qty": 1,
+          "variant": "White",
+          "confidence": "high",
+          "notes": "White power cord visible in packaging and separately on table in second image",
+          "bbox": null,
+          "object_id": null
+        },
+        {
+          "name": "Documentation",
+          "brand": "Havells",
+          "detected_qty": 1,
+          "variant": "Paper",
+          "confidence": "high",
+          "notes": "Instruction manual/warranty card visible in second image",
+          "bbox": null,
+          "object_id": null
+        }
+      ],
+      "matches": [
+        {
+          "item_name": "Havells Glace Plus 1000 W Dry Iron",
+          "expected_qty": 1,
+          "detected_qty": 1,
+          "variant_match": true,
+          "brand_match": true,
+          "status": "PASS"
+        }
+      ],
+      "missing_items": [],
+      "extra_items": [
+        {
+          "item_name": "Power Cord",
+          "qty": 1,
+          "notes": "Not in order"
+        },
+        {
+          "item_name": "Documentation",
+          "qty": 1,
+          "notes": "Not in order"
+        }
+      ],
+      "product_condition": {
+        "visible_damage": false,
+        "notes": "Product appears in good condition. Iron soleplate is clean and undamaged. Packaging shows normal wear from shipping but product itself is intact. Power cord and documentation present."
+      },
+      "decision": "STOP_FIX",
+      "decision_reason": "Extra 2 item(s).",
+      "confidence": "high",
+      "evidence": [
+        "Havells Glace Plus retail box visible with branding matching order",
+        "Blue and white iron visible matching color variant specification",
+        "Quantity matches: 1 unit expected, 1 unit detected",
+        "Standard accessories present: power cord and documentation",
+        "No visible damage to product or critical packaging",
+        "No unauthorized extra items detected"
+      ]
+    }
+  }
+]

@@ -24,7 +24,7 @@ def outcome_from_decision(decision: str) -> dict[str, Any]:
         return {"outcome": "seal", "verdict": "PASS", "status": "completed", "needs_human": False, "action": "continue"}
     if normalized in {"STOP_FIX", "STOP_AND_FIX", "STOP"}:
         return {"outcome": "stop_and_fix", "verdict": "FAIL", "status": "completed", "needs_human": True, "action": "hold"}
-    return {"outcome": "review_required", "verdict": "UNCERTAIN", "status": "pending", "needs_human": True, "action": "review"}
+    return {"outcome": "review_required", "verdict": "UNCERTAIN", "status": "completed", "needs_human": True, "action": "review"}
 
 
 def to_pack_agent_output(
@@ -170,6 +170,9 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
             fail_open={"code": "pending", "message": message, "retryable": True},
         )
 
+    input_refs = [{"ref": photos[0]["ref"], "sha256": photos[0]["sha256"], "kind": "image"}]
+    client = None
+    agent = None
     try:
         client = get_vlm_client(provider=chosen)
         agent = PackManagerAIAgent(vlm_client=client)
@@ -178,10 +181,11 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
         summary = result.to_summary_dict()
         checks = []
         for match in summary.get("matches") or []:
+            status = match.get("status")
             checks.append(
                 {
                     "check_key": "line_match",
-                    "verdict": "PASS" if match.get("status") == "PASS" else "FAIL",
+                    "verdict": status if status in {"PASS", "UNCERTAIN"} else "FAIL",
                     "confidence": None,
                     "expected": match.get("expected_qty"),
                     "observed": match.get("detected_qty"),
@@ -193,7 +197,7 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
             for check in checks:
                 if check["verdict"] != "FAIL":
                     check["verdict"] = "UNCERTAIN"
-        calls = 0 if client.provider_name == "simulation" else 1
+        calls = 0 if client.provider_name == "simulation" else agent.inspect_calls
         decision = summary.get("decision") or "UNCERTAIN"
         reason = summary.get("decision_reason") or ""
         if policy.get("seal_allowed") is False and str(decision).upper() in {"SEAL", "SEALED"}:
@@ -209,18 +213,21 @@ def run_pack_round3(body: dict[str, Any], *, provider: str | None = None) -> tup
             checks=checks,
             model_name=client.model_name,
             calls=calls,
-            input_refs=[{"ref": photos[0]["ref"], "sha256": photos[0]["sha256"], "kind": "image"}],
+            input_refs=input_refs,
         )
     except Exception as exc:  # noqa: BLE001 — fail open for the orchestrator
         message = str(exc)
+        calls = 0
+        if agent is not None and client.provider_name != "simulation":
+            calls = agent.inspect_calls
         return 200, to_pack_agent_output(
             body=body,
             decision="UNCERTAIN",
             reason=message,
             checks=[],
-            model_name="none",
-            calls=0,
-            input_refs=[],
+            model_name=client.model_name if calls else "none",
+            calls=calls,
+            input_refs=input_refs if calls else [],
             fail_open={"code": "pending", "message": message, "retryable": True},
         )
 
